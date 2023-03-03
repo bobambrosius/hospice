@@ -92,10 +92,13 @@ class Scheduler:
         else:
             # The two volunteers for this shift 
             # are selected from two different pools
-            diff_group_generic = tuple(self.group_generic - group_not_available)
-            diff_group_caretaker = tuple(self.group_caretaker - group_not_available)
+            diff_group_generic = tuple(
+                self.group_generic - group_not_available)
+            diff_group_caretaker = tuple(
+                self.group_caretaker - group_not_available)
                 
-            # Select a random sample of 1 person as a list of 1 item from both sets
+            # Select a random sample of 1 person 
+            # as a list of 1 item from both sets.
             # Note: function 'random' doesn't operate on a set,
             # so we convert it to a tuple.
             # Note: random.sample() returns a list. 
@@ -126,10 +129,11 @@ class Scheduler:
             # The same goes for 2 times in 3 weeks 
             # and for 1 shift in two weeks.
 
-            # Get the instances of class Person for the 2 volunteers in this shift
-            # only if the conditions (see the code) are met.
-            # Note: the availability counter must be exactly 1, because only then
-            #   already 2 shifts has been planned, of the three available shifts.
+            # Get the instances of class Person for the 2 volunteers 
+            # in this shift only if the conditions (see the code) are met.
+            # Note: the availability counter must be exactly 1, 
+            #   because only then already 2 shifts has been planned, 
+            #   of the three available shifts.
             person_selection= [ 
                     p for p in self.all_volunteers 
                     if p.name in current_agenda_item.persons 
@@ -146,13 +150,15 @@ class Scheduler:
                     for p in person_selection:
                             item.persons_not_available.add(p.name)
 
-                # If 2 times per 3 weeks, then make the next week also unavailable.
+                # If 2 times per 3 weeks, then 
+                # make the next week also unavailable.
                 # Same for 1 time in 2 weeks.
                 if ( (shiftcount == 2 and per_weeks == 3)
                         or (shiftcount == 1 and per_weeks ==2) ):
                     # select all agenda items for the next  week
                     ag_items = [ i for i in self.agenda.items
-                                if i.weeknr == current_agenda_item.weeknr + 1 ]
+                                if i.weeknr == 
+                                current_agenda_item.weeknr + 1 ]
                     # make the agenda items unavailable for this week
                     for item in ag_items:
                         for p in person_selection:
@@ -165,10 +171,14 @@ class Scheduler:
         #   in 'not_available', but it doesn't matter any more 
         #   for that shift is already sheduled.
         
-        #TODO it is possible that a person has a shift on the last day of the quarter.
-        #   The scheduler of the next quarter has no knowledge of te former planning.
-        #   And thus a person can be scheduled on the first day of the new quarter: two days in a row.
-        #   Solution: register the date for the persons in "nietInPeriode" in the csv file.
+        #TODO it is possible that a person has a shift 
+        #   on the last day of the quarter.
+        #   The scheduler of the next quarter has no knowledge 
+        #   of te former planning.
+        #   And thus a person can be scheduled 
+        #   on the first day of the new quarter: two days in a row.
+        #   Solution: register the date for the persons 
+        # in "nietInPeriode" in the csv file.
         current_day = current_agenda_item.date
         next_day = current_day + timedelta(days = 1)
         ag_items = [ i for i in self.agenda.items
@@ -187,7 +197,8 @@ class Scheduler:
         # We need the objects heer, not just te names
         persons = [ p for p in self.all_volunteers 
             if p.name in agenda_item.persons ]
-        # persons = [instance of a person_generic, instance of a person_caretaker]
+        # persons = 
+        #   [instance of a person_generic, instance of a person_caretaker]
         for p in persons:
             # Prevent counting below zero. 
             # Use max() which return the maximum value of two.
@@ -197,7 +208,8 @@ class Scheduler:
         # A volunteer must not be in more shifts 
         #   than is indicated in his/her shifts_per_weeks preference.
         # At the start of each week, reset the availability_counter 
-        #   with the number of shifts that the person is willing to work in a week.
+        #   with the number of shifts that the person 
+        #   is willing to work in a week.
         for person in self.all_volunteers:
             do_reset = True
             if person.availability_counter == 0:
@@ -229,7 +241,8 @@ class Scheduler:
                     #    weekday = weekday, shift = shift)
                     found_items = []
                     for ag_item in self.agenda.items:
-                        if ((ag_item.shift == shift) and (ag_item.weekday == weekday)):
+                        if ((ag_item.shift == shift) 
+                                and (ag_item.weekday == weekday)):
                             found_items.append(ag_item)
                     for i in found_items:
                         i.persons_not_available.add(person.name)
@@ -256,9 +269,12 @@ class Scheduler:
         with open(filename, 'w') as f:
             writer = csv.writer(f, delimiter=const.CSV_DELIMITER, 
                 quotechar='"', quoting=csv.QUOTE_ALL)
-            writer.writerow(["","","","","", "Jaar: " + str(self.year)])
-            writer.writerow(["","","","","", "Kwartaal: " + str(self.quarter)])
-            writer.writerow(["","","","","", "versie: " + "1"])
+            writer.writerow(["","","","","", 
+                             "Jaar: " + str(self.year)])
+            writer.writerow(["","","","","", 
+                             "Kwartaal: " + str(self.quarter)])
+            writer.writerow(["","","","","", 
+                             "versie: " + "1"])
             #writer.writerow(["Productiedatum", datetime.now()])
             writer.writerow([])
             
@@ -276,7 +292,8 @@ class Scheduler:
                     "donderdag", "vrijdag", "zaterdag", "zondag"])
                 
                 # get the agenda items for this week
-                ag_items = [ i for i in self.agenda.items if i.weeknr == week ]
+                ag_items = [ i for i in self.agenda.items 
+                            if i.weeknr == week ]
 
                 # row with dates, below 'week' indication
                 dates = OrderedSet(tuple(
@@ -317,7 +334,10 @@ class Scheduler:
                 if i.date != date:
                     f.write('\n')
                 date = i.date
-                f.write(f'{i.date} wn:{i.weeknr:>2} wd:{i.weekday} sh:{i.shift} {i.persons}\n')
+                f.write(f'{i.date} '
+                        f'wn:{i.weeknr:>2} '
+                        f'wd:{i.weekday} '
+                        f'sh:{i.shift} {i.persons}\n')
             print(f'\nBestand opgeslagen: {filename}')
 
     def prettyprint(self):
@@ -328,7 +348,10 @@ class Scheduler:
             'sh:{i.shift} ' +\
             '{i.persons}'
         for i in self.agenda.items:
-            print(f'{i.date} wn:{i.weeknr:>2} wd:{i.weekday} sh:{i.shift} {i.persons}')
+            print(f'{i.date} '
+                    f'wn:{i.weeknr:>2} '
+                    f'wd:{i.weekday} '
+                    f'sh:{i.shift} {i.persons}\n')
 
 
 def file_exists(filename, extension):
@@ -352,8 +375,10 @@ def main(year, quarter, version, input_filename):
     
     # Start scheduling!
     scheduler.schedule_volunteers() 
-    outfilename = ('./hospiceplanning ' + str(quarter) + 'e kwartaal ' + str(year) 
-        + ' versie ' + str(version))
+    outfilename = ('./hospiceplanning ' 
+                   + str(quarter) + 'e kwartaal ' 
+                   + str(year) 
+                   + ' versie ' + str(version))
     #if file_exists(outfilename, '.csv'):
     #    exit()
     if const.DEBUG:
@@ -371,10 +396,14 @@ if __name__ == '__main__':
             epilog=textwrap.dedent('''Voorbeeld:
             python hospiceplanner.py 2023 4 1 vrijwilligers-2023-kw1.csv
         '''))
-    parser.add_argument('year', help='voor wel jaar de planning gemaakt moet worden', type=int)
-    parser.add_argument('quarter', help='voor welk kwartaal', type=int)
-    parser.add_argument('version', help='welke versie', type=int)
-    parser.add_argument("filename", help='csv bestand met vrijwillergersgegevens')
+    parser.add_argument('year', 
+        help='voor wel jaar de planning gemaakt moet worden', type=int)
+    parser.add_argument('quarter', 
+        help='voor welk kwartaal', type=int)
+    parser.add_argument('version', 
+        help='welke versie', type=int)
+    parser.add_argument("filename", 
+        help='csv bestand met vrijwillergersgegevens')
     args = parser.parse_args()
     print("\nApplcation arguments are: ", args)
     main(args.year, args.quarter, args.version, args.filename)
