@@ -28,7 +28,7 @@ class Scheduler:
         self.year = year
         self.quarter = quarter
         self.agenda = agenda
-        self.volunteers = volunteers #TODO Waarom dit attribuut?
+        self.volunteers = volunteers #TODO betere naam gebruiken
         # We use 'all_' in the name, for we have subgroups
         self.all_volunteers = self.volunteers.persons 
         # Prepare the agenda with personal wishes,
@@ -351,6 +351,25 @@ class Scheduler:
                     f'wn:{i.weeknr:>2} '
                     f'wd:{i.weekday} '
                     f'sh:{i.shift} {i.persons}\n')
+    
+    def persons_not_scheduled(self):
+        """After de schedule is finished, determine if the capacity
+        of the full group of volunteers have been used.
+        """
+        scheduled_volunteers = set()
+        for ag_item in self.agenda.items:
+            for person_name in ag_item.persons:
+                scheduled_volunteers.add(person_name)
+        
+        all_volunteers = set(tuple([ p.name
+            for p in self.all_volunteers ]))
+
+        unscheduled = all_volunteers - scheduled_volunteers
+        if unscheduled:
+            print('De volgende vrijwilligers komen niet voor' + 
+                'in de agenda van dit kwartaal:')
+            for person_name in unscheduled:
+                print(person_name)
 
 
 def file_exists(filename, extension):
@@ -383,6 +402,8 @@ def main(year, quarter, version, input_filename):
     if const.DEBUG:
         scheduler.save_agenda_as_txt(outfilename + '.txt')
     scheduler.save_agenda_as_csv(outfilename + '.csv')
+    
+    scheduler.persons_not_scheduled()
 
 
 if __name__ == '__main__':
