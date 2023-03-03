@@ -10,6 +10,7 @@ import textwrap
 import init_agenda
 import init_volunteers
 import const
+import holyday
 
 
 class Scheduler:
@@ -39,10 +40,9 @@ class Scheduler:
         # first weeknr of the year quarter
         self.currentweek = self.agenda.items[0].weeknr 
         
-        # convert the holydays
-        # for easy comparison with agenda.item.date 
-        self.holydays = [ datetime.strptime(holyday, const.DATEFORMAT).date()
-                         for holyday in const.HOLYDAYS ]
+        # Get the holydays of this year in datetime.date format
+        self.holydays = holyday.determine_holydays(self.year)
+        pass
 
     def schedule_volunteers(self):
         """schedule_volunteers() is the main method 
