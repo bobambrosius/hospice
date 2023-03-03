@@ -42,7 +42,6 @@ class Scheduler:
         
         # Get the holydays of this year in datetime.date format
         self.holydays = holyday.determine_holydays(self.year)
-        pass
 
     def schedule_volunteers(self):
         """schedule_volunteers() is the main method 

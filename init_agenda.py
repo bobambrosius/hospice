@@ -56,10 +56,13 @@ class Agenda:
             const.DATEFORMAT = '%d-%m-%Y'
             dates = timespan.split('>') 
             if len(dates) >1:
-                startdate = datetime.strptime(dates[0], const.DATEFORMAT).date()
-                enddate = datetime.strptime(dates[1], const.DATEFORMAT).date()
+                startdate = datetime.strptime(dates[0], 
+                            const.DATEFORMAT).date()
+                enddate = datetime.strptime(dates[1], 
+                          const.DATEFORMAT).date()
             else:
-                enddate = startdate = datetime.strptime(dates[0], const.DATEFORMAT).date()
+                enddate = startdate = datetime.strptime(dates[0], 
+                                      const.DATEFORMAT).date()
                 
             currentdate = startdate
             while currentdate <= enddate:

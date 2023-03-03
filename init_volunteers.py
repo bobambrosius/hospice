@@ -19,13 +19,7 @@ class Person:
     .not_in_timespan: 
         On which days of the year quarter the person 
         doesn't want to be scheduled.
-    .latest_week_scheduled: 
-        The latest week in which the person was scheduled. 
-        It is updated each week that the scheduler processes
-        We need this to make the person unavailable for the rest of the week
-        if e.g. the person only works once a week.
-        TODO Is dit echt nodig? De availability counter staat toch op 0?
-    .vailability_counter: 
+    .availability_counter: 
         The number of times that the person 
         is available for scheduling per one or more weeks.
         The counter is initialised with shifts_per_week['shiftcount'].
@@ -40,7 +34,6 @@ class Person:
         self.not_on_shifts_per_weekday = dict()
         self.shifts_per_weeks = dict()
         self.not_in_timespan = [] 
-        self.latest_week_scheduled = 0 
         self.availability_counter = 0 
 
     def __repr__(self):
@@ -138,17 +131,22 @@ class Volunteers:
                         # not_on_shifts_per_weekday (nospw)
                         nospw_dict = {} 
                         if csv_data.NietOpDienstPerWeekdag:
-                            # The csv_data is e.g. 'ma:1, 2,3,4#   wo:3,4 # zo:4  '
+                            # The csv_data is e.g. 
+                            #   'ma:1, 2,3,4#  wo:3,4 # zo:4  '
                             nospw = csv_data.NietOpDienstPerWeekdag.replace(" ","")
-                            # Make a list of items in the string with delimiter = '#':
+                            # Make a list of items in the string 
+                            # with delimiter = '#':
                             nospw_base = [ i for i in nospw.split('#') ]
-                            #TODO last char cannot be a '#'. Need defensive programming!!
-                            #nospw_base is now ['ma:1,2,3,4', 'wo:3,4', 'zo:4'] 
+                            #TODO last char cannot be a '#'. 
+                            #       Need defensive programming!!
+                            #nospw_base is now 
+                            #       ['ma:1,2,3,4', 'wo:3,4', 'zo:4'] 
                             for item in nospw_base:
                                 nospw_weekday = item.split(":")
                                 # The first nospw_weekday is ['ma', '1,2,3,4']
-                                # Now make an integer list of the shifts string,
-                                # and replace the weekday names with isoweekday numbers.
+                                # Now make an integer list of the 
+                                # shifts string, and replace the weekday names 
+                                # with isoweekday numbers.
                                 nospw_dict[ 
                                     const.WEEKDAY_LOOKUP[nospw_weekday[0]] ] = [ 
                                     int(i) for i in nospw_weekday[1].split(",") ]
