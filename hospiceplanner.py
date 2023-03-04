@@ -129,7 +129,6 @@ class Scheduler:
             # so we convert it to a tuple.
             # Note: random.sample() returns a list. 
             # We need the first and only item [0]
-            # TODO use [person_generic] in stead of [0]
 
             # Choose generalist
             if diff_group_generic:
@@ -138,8 +137,8 @@ class Scheduler:
                 if pref_person:
                     person_generic = pref_person
                 else:
-                    person_generic = random.sample(
-                        diff_group_generic, 1)[0]
+                    [person_generic] = random.sample(
+                        diff_group_generic, 1)
             else:
                 person_generic = "" # nobody is available
                 
@@ -150,8 +149,8 @@ class Scheduler:
                 if pref_person:
                     person_caretaker = pref_person
                 else:
-                    person_caretaker = random.sample(
-                        diff_group_caretaker, 1)[0]
+                    [person_caretaker] = random.sample(
+                        diff_group_caretaker, 1)
             else:
                 person_caretaker = "" # nobody is available
         
