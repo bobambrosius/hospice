@@ -31,6 +31,7 @@ class Scheduler:
         self.volunteers = volunteers #TODO betere naam gebruiken
         # We use 'all_' in the name, for we have subgroups
         self.all_volunteers = self.volunteers.persons 
+
         # Prepare the agenda with personal wishes,
         # en register the availability in each agenda item .
         self._apply_static_rules() 
@@ -72,7 +73,7 @@ class Scheduler:
 
     def _determine_group_not_available(self, agenda_item):
         # Exclude the persons that are marked as not available for this shift
-        # from the persons that are avalable for the current shift.
+        # from the planning capacity
         group_not_available = set( tuple(agenda_item.persons_not_available) )
 
         # Also not available are the persons with availability_counter = 0
@@ -80,11 +81,37 @@ class Scheduler:
             for p in self.all_volunteers 
             if p.availability_counter == 0 ]))
         group_not_available.update(dynamic_not_available)
-
+        
+        # Also not available are persons with a preference, 
+        #       if it is NOT a preference for the current shift.
+        # Otherwise the person would be scheduled too early in a week,
+        #       and cannot be scheduled any more on the preferred moment.
+        # BUT a person with schedule 2 times in 1 week 
+        #       is also made not available
+        #       after being scheduled once in a week. Which is wrong.
+        # This is too complicated. So we leave it to coincidence
+        #       that a person with preferences is schedules too soon in a week
+        
         return group_not_available
             
     def _schedule_2_persons(self, agenda_item, group_not_available):
-        # Do not schedule volunteers on a holyday
+        """Update agenda_item.persons with 2 person names.
+        One of type caretaker and one of type generalist.
+        """
+        def helper_pref_person(service, diff_group):
+            persons = [ p for p in self.all_volunteers 
+                if p.preferred_shifts 
+                and p.service == service ]
+            for person in persons:
+                if person.name in diff_group:
+                    for pref_weekday, pref_shifts\
+                            in person.preferred_shifts.items():
+                        if (agenda_item.weekday == pref_weekday
+                                and agenda_item.shift in pref_shifts ):
+                            return person.name
+            return None
+
+        # Do not schedule on a holyday
         if agenda_item.date in self.holydays:
             person_generic = "" 
             person_caretaker = "" 
@@ -102,12 +129,29 @@ class Scheduler:
             # so we convert it to a tuple.
             # Note: random.sample() returns a list. 
             # We need the first and only item [0]
+            # TODO use [person_generic] in stead of [0]
+
+            # Choose generalist
             if diff_group_generic:
-                person_generic = random.sample(diff_group_generic, 1)[0]
+                pref_person =  helper_pref_person(
+                    'algemeen', diff_group_generic)
+                if pref_person:
+                    person_generic = pref_person
+                else:
+                    person_generic = random.sample(
+                        diff_group_generic, 1)[0]
             else:
                 person_generic = "" # nobody is available
+                
+            # Choose caretaker
             if diff_group_caretaker:
-                person_caretaker = random.sample(diff_group_caretaker, 1)[0]
+                pref_person =  helper_pref_person(
+                    'verzorger', diff_group_caretaker)
+                if pref_person:
+                    person_caretaker = pref_person
+                else:
+                    person_caretaker = random.sample(
+                        diff_group_caretaker, 1)[0]
             else:
                 person_caretaker = "" # nobody is available
         
@@ -366,7 +410,7 @@ class Scheduler:
 
         unscheduled = all_volunteers - scheduled_volunteers
         if unscheduled:
-            print('De volgende vrijwilligers komen niet voor' + 
+            print('De volgende vrijwilligers komen niet voor ' + 
                 'in de agenda van dit kwartaal:')
             for person_name in unscheduled:
                 print(person_name)

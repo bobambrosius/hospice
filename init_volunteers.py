@@ -19,6 +19,8 @@ class Person:
     .not_in_timespan: 
         On which days of the year quarter the person 
         doesn't want to be scheduled.
+    .preferred_shifts:
+        Some volunteers prefer to be scheduled on a specific day and shift.
     .availability_counter: 
         The number of times that the person 
         is available for scheduling per one or more weeks.
@@ -34,6 +36,7 @@ class Person:
         self.not_on_shifts_per_weekday = dict()
         self.shifts_per_weeks = dict()
         self.not_in_timespan = [] 
+        self.preferred_shifts = dict()
         self.availability_counter = 0 
 
     def __repr__(self):
@@ -43,6 +46,7 @@ class Person:
             f'not_on_shifts_per_weekday: {self.not_on_shifts_per_weekday}, '
             f'shifts_per_weeks: {self.shifts_per_weeks}, '
             f'not_in_timespan: {self.not_in_timespan}, '
+            f'preferred_shifts: {self.preferred_shifts}, '
             f'availability_counter: {self.availability_counter}')
 
 
@@ -93,6 +97,34 @@ class Volunteers:
         for p in self.persons:
             print(p)
 
+    def day_and_shift_to_dict(self, day_and_shift_string):
+        """
+        The day_and_shift_string is like 'ma:1, 2,3,4#  wo:3,4 # zo:4.'
+        The function returns the dict: { 1: [1,2,3,4], 3: [3,4], 7: [4] }
+        The days are translated to isoweekday numbers,
+        and the shifts are in a tuple.
+        """
+        result_dict = {}
+        if day_and_shift_string:
+            spaceless_string = day_and_shift_string.replace(" ","")
+            # Make a list of items in the string 
+            # with delimiter = '#':
+            day_and_shift_list = [ i for i in spaceless_string.split('#') ]
+            #TODO last char cannot be a '#'. 
+            #       Need defensive programming!!
+            # day_and_shift_list is e.g. ['ma:1,2,3,4', 'wo:3,4', 'zo:4'] 
+            for item in day_and_shift_list:
+                sep_weekday_and_shift = item.split(":")
+                # The first sep_weekday_and_shift is ['ma', '1,2,3,4']
+                # Now make a dict with key = isoweekday number
+                # and value = list of shifts.
+                key = const.WEEKDAY_LOOKUP[sep_weekday_and_shift[0]] 
+                value = ( int(i) for i in sep_weekday_and_shift[1].split(",") )
+                result_dict[key] = list(value)
+
+        # Result_dict is e.g. { 1: (1,2,3,4), 3: (3,4), 7: (4) }
+        return result_dict
+
     def _get_volunteers(self, infile):
         """read a prepared csv file <infile>, which is record-delimited with
         DELIMITER, into a dynamic namedtuple.
@@ -128,40 +160,26 @@ class Volunteers:
                             + tussenvoegsel + " " + csv_data.Achternaam)
 
                         # Column NietOpDienstPerWeekdag
-                        # not_on_shifts_per_weekday (nospw)
-                        nospw_dict = {} 
-                        if csv_data.NietOpDienstPerWeekdag:
-                            # The csv_data is e.g. 
-                            #   'ma:1, 2,3,4#  wo:3,4 # zo:4  '
-                            nospw = csv_data.NietOpDienstPerWeekdag.replace(" ","")
-                            # Make a list of items in the string 
-                            # with delimiter = '#':
-                            nospw_base = [ i for i in nospw.split('#') ]
-                            #TODO last char cannot be a '#'. 
-                            #       Need defensive programming!!
-                            #nospw_base is now 
-                            #       ['ma:1,2,3,4', 'wo:3,4', 'zo:4'] 
-                            for item in nospw_base:
-                                nospw_weekday = item.split(":")
-                                # The first nospw_weekday is ['ma', '1,2,3,4']
-                                # Now make an integer list of the 
-                                # shifts string, and replace the weekday names 
-                                # with isoweekday numbers.
-                                nospw_dict[ 
-                                    const.WEEKDAY_LOOKUP[nospw_weekday[0]] ] = [ 
-                                    int(i) for i in nospw_weekday[1].split(",") ]
-                            # Before weekday_lookup the nospw_dict endresult is
-                            #       { 'ma': [1,2,3,4], 'wo': [3,4], 'zo'; [4] }
-                            # After weekday_lookup the nospw_dict endresult is 
-                            #       { 1: [1,2,3,4], 3: [3,4], 7: [4] }
-
+                        not_on_shifts_per_weekday = (
+                            self.day_and_shift_to_dict(
+                                csv_data.NietOpDienstPerWeekdag) 
+                            )
+                        
+                        # Column VoorkeurDagEnDienst
+                        # preferred_shifts (prefs)
+                        prefs_dict = (
+                            self.day_and_shift_to_dict(
+                                csv_data.VoorkeurDagEnDienst)
+                            )
+                        
                         # Column DienstenPerAantalWeken
                         # shifts_per_weeks dicionary
                         shifts_per_week = (
                             csv_data.DienstenPerAantalWeken.replace(" ","").split(","))
                         shifts_per_weeks = {
                             "shiftcount": int( shifts_per_week[0].strip() ), 
-                            "per_weeks": int( shifts_per_week[1].strip() ) }
+                            "per_weeks": int( shifts_per_week[1].strip() ) 
+                            }
 
                         # availability_counter (no column)
                         availability_counter = shifts_per_weeks["shiftcount"]
@@ -170,14 +188,18 @@ class Volunteers:
                         not_in_timespan = []
                         if csv_data.NietInPeriode:
                             for period in csv_data.NietInPeriode.replace(" ","").split(","):
-                                not_in_timespan.append(period.strip())
+                                not_in_timespan.append(period)
 
+                        # Now we have all the data 
+                        # to make an instance of class Person
                         person = Person()
                         person.name = name
                         person.service = service
-                        person.not_on_shifts_per_weekday = nospw_dict
+                        person.not_on_shifts_per_weekday = (
+                            not_on_shifts_per_weekday)
                         person.shifts_per_weeks = shifts_per_weeks
                         person.not_in_timespan = not_in_timespan
+                        person.preferred_shifts = prefs_dict
                         person.availability_counter = availability_counter
                         volunteers.append(person)
                 except AttributeError as e:
@@ -189,5 +211,5 @@ class Volunteers:
 if __name__ == '__main__':
     csv_filename = 'vrijwilligers-2023-kw2.csv'
     group = Volunteers(csv_filename)
-    #group.show_volunteers_data()
+    group.show_volunteers_data()
     group.show_volunteerscount()
