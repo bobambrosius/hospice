@@ -52,19 +52,19 @@ class Person:
             f'availability_counter: {self.availability_counter}')
 
 
-class Volunteers:
+class Volunteer:
     """A Volunteer is a Person who works without fee for the organisation hospicedereggestroom
     .group_generic:
-        A set of items Person who's service is generic
+        A set of objects of type Person who's service is generic
     .group caretaker:
-        A set of persons who's service is caretaking
+        A set of objects of type Person who's service is caretaking
     """
-    def __init__(self, volunteerfilename):
-        self.volunteerfilename = volunteerfilename
-        print(f'Bestand lezen: "{self.volunteerfilename}"...')
+    def __init__(self, sourcefilename):
+        self.sourcefilename = sourcefilename
+        print(f'Bestand lezen: "{self.sourcefilename}"...')
 
         # self.persons is a list op namedtuples 'Person'
-        self.persons = self._get_volunteers(self.volunteerfilename)
+        self.persons = self._get_volunteers(self.sourcefilename)
 
         # Get all 'generic' workers and all 'caretaker' workers.
         # Note: we use set operators on these groups and
@@ -99,6 +99,7 @@ class Volunteers:
         print()
         print(f'Er zijn {len(self.group_caretaker)} verzorgers beschikbaar.')
         print(f'Er zijn {len(self.group_generic)} algemenen beschikbaar.')
+        print()
 
     def show_volunteers_data(self):
         print()
@@ -114,15 +115,12 @@ class Volunteers:
         """
         if day_and_shift_string:
             spaceless_string = day_and_shift_string.replace(" ","").strip('#')
-            #spaceless_string = spaceless_string.strip('#')
             # Make a list of items in the string 
             # with delimiter = '#':
-            day_and_shift_list = ( i for i in spaceless_string.split('#') )
-            #TODO last char cannot be a '#'. 
-            #       Need defensive programming!!
+            day_and_shift_items = ( i for i in spaceless_string.split('#') )
             # day_and_shift_list is e.g. ['ma:1,2,3,4', 'wo:3,4', 'zo:4'] 
             result_dict = {}
-            for item in day_and_shift_list:
+            for item in day_and_shift_items:
                 sep_weekday_and_shift = item.split(":")
                 # The first sep_weekday_and_shift is ['ma', '1,2,3,4']
                 # Now make a dict with key = isoweekday number
@@ -216,11 +214,11 @@ class Volunteers:
                 except AttributeError:
                     print(traceback.format_exc())
                     exit()
-        return volunteers
+        return tuple(volunteers)
 
 
 if __name__ == '__main__':
     csv_filename = 'vrijwilligers-2023-kw2.csv'
-    group = Volunteers(csv_filename)
+    group = Volunteer(csv_filename)
     group.show_volunteers_data()
     group.show_volunteerscount()

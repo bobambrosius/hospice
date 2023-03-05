@@ -28,16 +28,15 @@ class Scheduler:
         self.year = year
         self.quarter = quarter
         self.agenda = agenda
-        self.volunteers = volunteers #TODO betere naam gebruiken
         # We use 'all_' in the name, for we have subgroups
-        self.all_volunteers = self.volunteers.persons 
+        self.volunteers = volunteers.persons 
 
         # Prepare the agenda with personal wishes,
         # en register the availability in each agenda item .
         self._apply_static_rules() 
 
-        self.group_generic = self.volunteers.group_generic
-        self.group_caretaker = self.volunteers.group_caretaker
+        self.group_generic = volunteers.group_generic
+        self.group_caretaker = volunteers.group_caretaker
         # first weeknr of the year quarter
         self.currentweek = self.agenda.items[0].weeknr 
         
@@ -78,7 +77,7 @@ class Scheduler:
 
         # Also not available are the persons with availability_counter = 0
         dynamic_not_available = set(tuple([ p.name 
-            for p in self.all_volunteers 
+            for p in self.volunteers 
             if p.availability_counter == 0 ]))
         group_not_available.update(dynamic_not_available)
         
@@ -99,7 +98,7 @@ class Scheduler:
         One of type caretaker and one of type generalist.
         """
         def helper_pref_person(service, diff_group):
-            persons = [ p for p in self.all_volunteers 
+            persons = [ p for p in self.volunteers 
                 if p.preferred_shifts 
                 and p.service == service ]
             for person in persons:
@@ -177,7 +176,7 @@ class Scheduler:
             #   because only then already 2 shifts has been planned, 
             #   of the three available shifts.
             person_selection= [ 
-                    p for p in self.all_volunteers 
+                    p for p in self.volunteers 
                     if p.name in current_agenda_item.persons 
                     and (p.shifts_per_weeks['shiftcount'] == shiftcount
                         and p.shifts_per_weeks["per_weeks"] == per_weeks
@@ -237,7 +236,7 @@ class Scheduler:
     def _update_availability_counter(self, agenda_item):
         # Decrease availability_counter for the current week.
         # We need the objects heer, not just te names
-        persons = [ p for p in self.all_volunteers 
+        persons = [ p for p in self.volunteers 
             if p.name in agenda_item.persons ]
         # persons = 
         #   [instance of a person_generic, instance of a person_caretaker]
@@ -252,7 +251,7 @@ class Scheduler:
         # At the start of each week, reset the availability_counter 
         #   with the number of shifts that the person 
         #   is willing to work in a week.
-        for person in self.all_volunteers:
+        for person in self.volunteers:
             do_reset = True
             if person.availability_counter == 0:
                 # EXCEPT when a person's preference is 1x per 2 weeks.
@@ -272,7 +271,7 @@ class Scheduler:
         or who don't want to work on a certain day of the week,
         or who don't want to work on specific dates.
         """
-        for person in self.all_volunteers:
+        for person in self.volunteers:
             # person is not working on a specific day of week
             # on a specific shift
             for item in person.not_on_shifts_per_weekday.items():
@@ -363,7 +362,7 @@ class Scheduler:
                     row.extend(list(map(no_volunteer_in_shift, generalists)))
                     writer.writerow(row) 
                     writer.writerow([])
-            print(f'\nBestand opgeslagen: {filename}')
+            print(f'Bestand opgeslagen: {filename}')
 
     def save_agenda_as_txt(self, filename):
         with open(filename, 'w') as f:
@@ -379,7 +378,7 @@ class Scheduler:
                 date = i.date
                 f.write(f'{i.date} wn:{i.weeknr:>2} {weekday} '
                         f'sh:{i.shift} {i.persons}\n')
-            print(f'\nBestand opgeslagen: {filename}')
+            print(f'Bestand opgeslagen: {filename}')
 
     def prettyprint(self):
         format = \
@@ -404,7 +403,7 @@ class Scheduler:
                 scheduled_volunteers.add(person_name)
         
         all_volunteers = set(tuple([ p.name
-            for p in self.all_volunteers ]))
+            for p in self.volunteers ]))
 
         unscheduled = all_volunteers - scheduled_volunteers
         if unscheduled:
@@ -428,7 +427,7 @@ def file_exists(filename, extension):
 
 def main(year, quarter, version, input_filename):
     agenda = init_agenda.Agenda(year=year, quarter=quarter)
-    volunteers = init_volunteers.Volunteers(input_filename)
+    volunteers = init_volunteers.Volunteer(input_filename)
     #volunteers.show_volunteers_info()
     volunteers.show_volunteerscount()
     scheduler = Scheduler(year, quarter, agenda, volunteers) 
@@ -467,6 +466,6 @@ if __name__ == '__main__':
     parser.add_argument("filename", 
         help='csv bestand met vrijwillergersgegevens')
     args = parser.parse_args()
-    print("\nApplcation arguments are: ", args)
+    print("\nApplication arguments are: ", args)
     main(args.year, args.quarter, args.version, args.filename)
     
