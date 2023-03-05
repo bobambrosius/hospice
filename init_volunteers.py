@@ -1,10 +1,12 @@
 from collections import namedtuple
+import traceback
 import csv
 import const
 
 
 class Person:
     """
+    A Person is a human being.
     .name: 
         Full name of the person e.g. "John Doe".
     .service: 
@@ -33,9 +35,9 @@ class Person:
     def __init__(self):
         self.name = "" 
         self.service = "" 
-        self.not_on_shifts_per_weekday = dict()
         self.shifts_per_weeks = dict()
-        self.not_in_timespan = [] 
+        self.not_on_shifts_per_weekday = dict()
+        self.not_in_timespan = [] # a tuple after reading data
         self.preferred_shifts = dict()
         self.availability_counter = 0 
 
@@ -43,14 +45,20 @@ class Person:
         return(
             f'name: {self.name}, '
             f'service: { self.service }, '
-            f'not_on_shifts_per_weekday: {self.not_on_shifts_per_weekday}, '
             f'shifts_per_weeks: {self.shifts_per_weeks}, '
+            f'not_on_shifts_per_weekday: {self.not_on_shifts_per_weekday}, '
             f'not_in_timespan: {self.not_in_timespan}, '
             f'preferred_shifts: {self.preferred_shifts}, '
             f'availability_counter: {self.availability_counter}')
 
 
 class Volunteers:
+    """A Volunteer is a Person who works without fee for the organisation hospicedereggestroom
+    .group_generic:
+        A set of items Person who's service is generic
+    .group caretaker:
+        A set of persons who's service is caretaking
+    """
     def __init__(self, volunteerfilename):
         self.volunteerfilename = volunteerfilename
         print(f'Bestand lezen: "{self.volunteerfilename}"...')
@@ -99,31 +107,32 @@ class Volunteers:
 
     def day_and_shift_to_dict(self, day_and_shift_string):
         """
-        The day_and_shift_string is like 'ma:1, 2,3,4#  wo:3,4 # zo:4.'
-        The function returns the dict: { 1: [1,2,3,4], 3: [3,4], 7: [4] }
-        The days are translated to isoweekday numbers,
+        The day_and_shift_string is for example 'ma:1, 2,3,4#  wo:3,4 # zo:4.'
+        The function returns the dict: { 1: (1,2,3,4), 3: (3,4), 7: (4) }
+        The weekddays are translated to isoweekday numbers,
         and the shifts are in a tuple.
         """
-        result_dict = {}
         if day_and_shift_string:
-            spaceless_string = day_and_shift_string.replace(" ","")
+            spaceless_string = day_and_shift_string.replace(" ","").strip('#')
+            #spaceless_string = spaceless_string.strip('#')
             # Make a list of items in the string 
             # with delimiter = '#':
-            day_and_shift_list = [ i for i in spaceless_string.split('#') ]
+            day_and_shift_list = ( i for i in spaceless_string.split('#') )
             #TODO last char cannot be a '#'. 
             #       Need defensive programming!!
             # day_and_shift_list is e.g. ['ma:1,2,3,4', 'wo:3,4', 'zo:4'] 
+            result_dict = {}
             for item in day_and_shift_list:
                 sep_weekday_and_shift = item.split(":")
                 # The first sep_weekday_and_shift is ['ma', '1,2,3,4']
                 # Now make a dict with key = isoweekday number
-                # and value = list of shifts.
+                # and value = tuple of shifts.
                 key = const.WEEKDAY_LOOKUP[sep_weekday_and_shift[0]] 
                 value = ( int(i) for i in sep_weekday_and_shift[1].split(",") )
-                result_dict[key] = list(value)
-
-        # Result_dict is e.g. { 1: (1,2,3,4), 3: (3,4), 7: (4) }
-        return result_dict
+                result_dict[key] = tuple(value)
+            return result_dict
+        else:
+            return {}
 
     def _get_volunteers(self, infile):
         """read a prepared csv file <infile>, which is record-delimited with
@@ -149,15 +158,15 @@ class Volunteers:
                             and csv_data.DienstenPerAantalWeken ):
 
                         # Column Service
-                        service = csv_data.Service
+                        service = csv_data.Service.strip()
 
                         # Columns Achternaam, Tussenv, Voornaam
                         # Person name
                         tussenvoegsel = ""
                         if csv_data.Tussenv: 
-                            tussenvoegsel = " " + csv_data.Tussenv
+                            tussenvoegsel = " " + csv_data.Tussenv.strip()
                         name = (csv_data.Voornaam 
-                            + tussenvoegsel + " " + csv_data.Achternaam)
+                            + tussenvoegsel + " " + csv_data.Achternaam.strip())
 
                         # Column NietOpDienstPerWeekdag
                         not_on_shifts_per_weekday = (
@@ -173,12 +182,12 @@ class Volunteers:
                             )
                         
                         # Column DienstenPerAantalWeken
-                        # shifts_per_weeks dicionary
+                        # shifts_per_weeks dictionary
                         shifts_per_week = (
                             csv_data.DienstenPerAantalWeken.replace(" ","").split(","))
                         shifts_per_weeks = {
-                            "shiftcount": int( shifts_per_week[0].strip() ), 
-                            "per_weeks": int( shifts_per_week[1].strip() ) 
+                            "shiftcount": int( shifts_per_week[0] ), 
+                            "per_weeks": int( shifts_per_week[1] ) 
                             }
 
                         # availability_counter (no column)
@@ -189,6 +198,8 @@ class Volunteers:
                         if csv_data.NietInPeriode:
                             for period in csv_data.NietInPeriode.replace(" ","").split(","):
                                 not_in_timespan.append(period)
+                            # Make the data immutable
+                            not_in_timespan = tuple(not_in_timespan)
 
                         # Now we have all the data 
                         # to make an instance of class Person
@@ -202,8 +213,8 @@ class Volunteers:
                         person.preferred_shifts = prefs_dict
                         person.availability_counter = availability_counter
                         volunteers.append(person)
-                except AttributeError as e:
-                    print(e)
+                except AttributeError:
+                    print(traceback.format_exc())
                     exit()
         return volunteers
 

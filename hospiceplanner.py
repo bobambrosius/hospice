@@ -367,18 +367,17 @@ class Scheduler:
 
     def save_agenda_as_txt(self, filename):
         with open(filename, 'w') as f:
-            weekday = 0
+            weekday_nr = 0
             date = ''
             for i in self.agenda.items:
-                if i.weekday == 1 and weekday == 7: 
+                if i.weekday == 1 and weekday_nr == 7: 
                     f.write('-'*80 + '\n') # Draw a line at a new week
-                weekday = i.weekday
+                weekday_nr = i.weekday
+                weekday = const.WEEKDAY_NAME_LOOKUP[weekday_nr]
                 if i.date != date:
                     f.write('\n')
                 date = i.date
-                f.write(f'{i.date} '
-                        f'wn:{i.weeknr:>2} '
-                        f'wd:{i.weekday} '
+                f.write(f'{i.date} wn:{i.weeknr:>2} {weekday} '
                         f'sh:{i.shift} {i.persons}\n')
             print(f'\nBestand opgeslagen: {filename}')
 
