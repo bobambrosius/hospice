@@ -219,7 +219,7 @@ class Scheduler:
         #   And thus a person can be scheduled 
         #   on the first day of the new quarter: two days in a row.
         #   Solution: register the date for the persons 
-        # in "nietInPeriode" in the csv file.
+        #   in "nietInPeriode" in the csv source file.
         current_day = current_agenda_item.date
         next_day = current_day + timedelta(days = 1)
         ag_items = [ i for i in self.agenda.items

@@ -1,7 +1,9 @@
 from collections import namedtuple
+import re
 import traceback
 import csv
 import const
+import exceptions
 
 
 class Person:
@@ -65,6 +67,7 @@ class Volunteer:
 
         # self.persons is a list op namedtuples 'Person'
         self.persons = self._get_volunteers(self.sourcefilename)
+        self._sanity_check("duplicate_names")
 
         # Get all 'generic' workers and all 'caretaker' workers.
         # Note: we use set operators on these groups and
@@ -106,21 +109,29 @@ class Volunteer:
         for p in self.persons:
             print(p)
 
-    def day_and_shift_to_dict(self, day_and_shift_string):
+    def day_and_shifts_to_dict(self, day_and_shifts_string, columnname):
         """
-        The day_and_shift_string is for example 'ma:1, 2,3,4#  wo:3,4 # zo:4.'
+        The day_and_shifts_string is for example 'ma:1, 2,3,4#  wo:3,4 # zo:4.'
         The function returns the dict: { 1: (1,2,3,4), 3: (3,4), 7: (4) }
         The weekddays are translated to isoweekday numbers,
         and the shifts are in a tuple.
         """
-        if day_and_shift_string:
-            spaceless_string = day_and_shift_string.replace(" ","").strip('#')
+        if day_and_shifts_string:
+            spaceless_string = day_and_shifts_string.replace(" ","")
+            
+            # Check the input string
+            self._sanity_check('day_and_shifts_string', spaceless_string,
+                columnname = columnname )
+            
+            # Remove the last '#' AFTER the sanity check
+            spaceless_string = spaceless_string.strip('#')
+            
             # Make a list of items in the string 
             # with delimiter = '#':
-            day_and_shift_items = ( i for i in spaceless_string.split('#') )
+            day_and_shifts_items = ( i for i in spaceless_string.split('#') )
             # day_and_shift_list is e.g. ['ma:1,2,3,4', 'wo:3,4', 'zo:4'] 
             result_dict = {}
-            for item in day_and_shift_items:
+            for item in day_and_shifts_items:
                 sep_weekday_and_shift = item.split(":")
                 # The first sep_weekday_and_shift is ['ma', '1,2,3,4']
                 # Now make a dict with key = isoweekday number
@@ -161,22 +172,25 @@ class Volunteer:
                         # Columns Achternaam, Tussenv, Voornaam
                         # Person name
                         tussenvoegsel = ""
-                        if csv_data.Tussenv: 
+                        if csv_data.Tussenv.strip(): 
                             tussenvoegsel = " " + csv_data.Tussenv.strip()
-                        name = (csv_data.Voornaam 
+                        name = (csv_data.Voornaam.strip()
                             + tussenvoegsel + " " + csv_data.Achternaam.strip())
-
+                        if name == "Johan Nijeboer":
+                            pass
                         # Column NietOpDienstPerWeekdag
                         not_on_shifts_per_weekday = (
-                            self.day_and_shift_to_dict(
-                                csv_data.NietOpDienstPerWeekdag) 
+                            self.day_and_shifts_to_dict(
+                            csv_data.NietOpDienstPerWeekdag,
+                            'NietOpDienstPerWeekdag') 
                             )
                         
                         # Column VoorkeurDagEnDienst
                         # preferred_shifts (prefs)
                         prefs_dict = (
-                            self.day_and_shift_to_dict(
-                                csv_data.VoorkeurDagEnDienst)
+                            self.day_and_shifts_to_dict(
+                            csv_data.VoorkeurDagEnDienst,
+                            'VoorkeurDagEnDienst')
                             )
                         
                         # Column DienstenPerAantalWeken
@@ -199,8 +213,7 @@ class Volunteer:
                             # Make the data immutable
                             not_in_timespan = tuple(not_in_timespan)
 
-                        # Now we have all the data 
-                        # to make an instance of class Person
+                        # Now we have all the data to instantiate a Person
                         person = Person()
                         person.name = name
                         person.service = service
@@ -211,11 +224,47 @@ class Volunteer:
                         person.preferred_shifts = prefs_dict
                         person.availability_counter = availability_counter
                         volunteers.append(person)
-                except AttributeError:
-                    print(traceback.format_exc())
+                #TODO The value error still comes 
+                # from namedtuple("data", next(reader))!
+                except exceptions.InvalidColumnHeaderError:
                     exit()
         return tuple(volunteers)
 
+    def _sanity_check(self, test, operand = None, columnname = None):
+        """Check the validity of the input data."""
+        
+        #------------------------------------------------------------
+        # Start of helper functions
+        def find_duplicate_personnames(nameslist, name):
+            return [ idx for idx, value in enumerate(nameslist)
+                     if value == name ]
+        
+        def check_day_and_shifts_string(operand):
+            # There are no spaces in the operand
+            # and the operand does not end with a '#'.
+            # operand example: di:1,2,3# wo:1,2,3# do:1,2,3# vr:1,2,3
+            
+            # The pattern is
+            # weekday + ':'
+            #   + comma seperated shiftnumber e.g (1,2,3,4) or (1,2) or (3)
+            # and then an endless repetition of
+            #   '#' + (the first part, ending with '#').
+            #TODO 2,2,3 should not match!
+            pattern = re.compile(r'^(((ma|di|wo|do|vr|za|zo)[:][1234]([,][1234])*)[#])*$')
+            return re.match(pattern, operand)
+
+        # End of helper functions
+        #------------------------------------------------------------
+        if test == 'duplicate_names': 
+            nameslist = [ p.name for p in self.persons ]
+            for name in nameslist:
+                if len(find_duplicate_personnames(nameslist, name)) > 1:
+                    raise exceptions.DuplicatePersonnameError(name)
+        
+        if test == 'day_and_shifts_string':
+            if not check_day_and_shifts_string(operand):
+                raise exceptions.DayAndShiftsStringError(
+                        columnname + " " + operand)
 
 if __name__ == '__main__':
     csv_filename = 'vrijwilligers-2023-kw2.csv'
