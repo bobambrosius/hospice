@@ -39,3 +39,16 @@ class InvalidColumnHeaderError(ValueError):
         self.name = columnheader
         self.msg = msg
         super().__init__(self.msg + ': "' + columnheader + '"')
+
+
+class InvalidSourceFile(Exception):
+    """Exception raised if the sourcefile can't be read.
+
+    Attributes:
+        reason -- The reason why the sourcefile is invalid
+    """
+    def __init__(self, reason, msg='Bronbestand is niet leesbaar. '):
+        self.reason = reason
+        self.msg = msg
+        super().__init__(self.msg + reason)
+

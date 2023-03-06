@@ -109,7 +109,7 @@ class Volunteer:
         for p in self.persons:
             print(p)
 
-    def day_and_shifts_to_dict(self, day_and_shifts_string, columnname):
+    def day_and_shifts_to_dict(self, day_and_shifts_string, columnname, line_num):
         """
         The day_and_shifts_string is for example 'ma:1, 2,3,4#  wo:3,4 # zo:4.'
         The function returns the dict: { 1: (1,2,3,4), 3: (3,4), 7: (4) }
@@ -121,7 +121,7 @@ class Volunteer:
             
             # Check the input string
             self._sanity_check('day_and_shifts_string', spaceless_string,
-                columnname = columnname )
+                columnname = columnname, line_num = line_num)
             
             # Remove the last '#' AFTER the sanity check
             spaceless_string = spaceless_string.strip('#')
@@ -151,13 +151,24 @@ class Volunteer:
         Assign the values to the an instance of class 'Person'.
         Return a list of the instances 'Person'.
         """
+        with open(infile, newline ="") as f:
+            dialect = csv.Sniffer().sniff(f.read(1024))
+            #TODO bij Error("Could not determine delimiter")
+            # is het bronbestand zonder string-delimiter!
+            # reraise? En dit melden
+            if dialect.delimiter != const.CSV_DELIMITER:
+                raise exceptions.InvalidSourceFile('Het veld-scheidingteken is niet ";".')
+            f.seek(0)
+            if not csv.Sniffer().has_header(f.read(1024)):
+                raise exceptions.InvalidSourceFile('Kolomkoppen ontbreken.')
+            f.seek(0)
+
         volunteers = []
         with open(infile, newline="") as f:
             #TODO check that the DELIMITER value is not used in the cells
             reader = csv.reader(f, delimiter=const.CSV_DELIMITER)
             # get names from column headers
             #TODO kolomnamen kunnen geen spaties of '-' teken bevatten
-            #TODO Er mogen niet twee of meer personen met dezelfde naam zijn.
             Data = namedtuple("Data", next(reader))
             for csv_data in map(Data._make, reader):
                 try:
@@ -176,13 +187,12 @@ class Volunteer:
                             tussenvoegsel = " " + csv_data.Tussenv.strip()
                         name = (csv_data.Voornaam.strip()
                             + tussenvoegsel + " " + csv_data.Achternaam.strip())
-                        if name == "Johan Nijeboer":
-                            pass
+
                         # Column NietOpDienstPerWeekdag
                         not_on_shifts_per_weekday = (
                             self.day_and_shifts_to_dict(
                             csv_data.NietOpDienstPerWeekdag,
-                            'NietOpDienstPerWeekdag') 
+                            'NietOpDienstPerWeekdag', reader.line_num) 
                             )
                         
                         # Column VoorkeurDagEnDienst
@@ -190,7 +200,7 @@ class Volunteer:
                         prefs_dict = (
                             self.day_and_shifts_to_dict(
                             csv_data.VoorkeurDagEnDienst,
-                            'VoorkeurDagEnDienst')
+                            'VoorkeurDagEnDienst', reader.line_num)
                             )
                         
                         # Column DienstenPerAantalWeken
@@ -226,11 +236,13 @@ class Volunteer:
                         volunteers.append(person)
                 #TODO The value error still comes 
                 # from namedtuple("data", next(reader))!
+                # reraise??
                 except exceptions.InvalidColumnHeaderError:
                     exit()
         return tuple(volunteers)
 
-    def _sanity_check(self, test, operand = None, columnname = None):
+    def _sanity_check(self, test, operand = None, 
+                      columnname = None, line_num = None):
         """Check the validity of the input data."""
         
         #------------------------------------------------------------
@@ -264,7 +276,8 @@ class Volunteer:
         if test == 'day_and_shifts_string':
             if not check_day_and_shifts_string(operand):
                 raise exceptions.DayAndShiftsStringError(
-                        columnname + " " + operand)
+                        columnname + ", regel: " 
+                        + str(line_num) + ", tekst: " + operand)
 
 if __name__ == '__main__':
     csv_filename = 'vrijwilligers-2023-kw2.csv'
