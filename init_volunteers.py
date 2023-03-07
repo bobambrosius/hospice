@@ -251,8 +251,11 @@ class Volunteer:
                      if value == name ]
         
         def check_day_and_shifts_string(operand):
+            # Return None if something is wrong.
+            # return anything else if things are o.k.
+
             # There are no spaces in the operand.
-            # operand example: di:1,2,3# wo:1,2,3# do:1,2,3# vr:1,2,3#
+            # operand example: di:1,2,3#wo:1,2,3#do:1,2,3#vr:1,2,3#
             
             # The operand does not end with a '#'.
             if operand[-1] != "#":

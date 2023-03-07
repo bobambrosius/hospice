@@ -408,7 +408,27 @@ class Scheduler:
                     f'wn:{i.weeknr:>2} '
                     f'wd:{i.weekday} '
                     f'sh:{i.shift} {i.persons}\n')
-    
+
+    def persons_not_scheduled_in_weekend(self):
+        """After de schedule is finished, determine which persons
+        are not scheduled in the weekend.
+        """
+        scheduled_volunteers = set()
+        for ag_item in self.agenda.items:
+            if ag_item.weekday in (6,7):
+                scheduled_volunteers.update(ag_item.persons)
+
+        all_volunteers = set(tuple([ p.name
+            for p in self.volunteers ]))
+
+        unscheduled = all_volunteers - scheduled_volunteers
+        if unscheduled:
+            unscheduled = list(unscheduled)
+            print('\nDe volgende vrijwilligers zijn niet ' + 
+                'ingepland in een weekend:')
+            for person_name in unscheduled:
+                print(person_name)
+         
     def persons_not_scheduled(self):
         """After de schedule is finished, determine if the capacity
         of the full group of volunteers have been used.
@@ -450,10 +470,10 @@ def main(year, quarter, version, input_filename):
     
     # Start scheduling!
     scheduler.schedule_volunteers() 
-    outfilename = ('./hospiceplanning ' 
+    outfilename = ('./hospice ' 
                    + str(quarter) + 'e kwartaal ' 
                    + str(year) 
-                   + ' versie ' + str(version))
+                   + ' v. ' + str(version))
     #if file_exists(outfilename, '.csv'):
     #    exit()
     if const.DEBUG:
@@ -461,6 +481,7 @@ def main(year, quarter, version, input_filename):
     scheduler.save_agenda_as_csv(outfilename + '.csv')
     
     scheduler.persons_not_scheduled()
+    scheduler.persons_not_scheduled_in_weekend()
 
 
 if __name__ == '__main__':
