@@ -196,9 +196,10 @@ class Volunteer:
                         
                         # Column VoorkeurDagEnDienst
                         # preferred_shifts (prefs)
+                        # Add text in column VoorkeurStatisch.
                         prefs_dict = (
                             self.day_and_shifts_to_dict(
-                            csv_data.VoorkeurDagEnDienst,
+                            csv_data.VoorkeurDagEnDienst + csv_data.VoorkeurStatisch,
                             'VoorkeurDagEnDienst', reader.line_num)
                             )
                         
