@@ -5,6 +5,7 @@ backup20230225/
 *.txt
 *.xls
 *.xlsx
+test*.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
