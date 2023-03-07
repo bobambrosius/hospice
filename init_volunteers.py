@@ -67,7 +67,7 @@ class Volunteer:
 
         # self.persons is a list op namedtuples 'Person'
         self.persons = self._get_volunteers(self.sourcefilename)
-        self._sanity_check("duplicate_names")
+        self._check_sanity("duplicate_names")
 
         # Get all 'generic' workers and all 'caretaker' workers.
         # Note: we use set operators on these groups and
@@ -120,7 +120,7 @@ class Volunteer:
             spaceless_string = day_and_shifts_string.replace(" ","")
             
             # Check the input string
-            self._sanity_check('day_and_shifts_string', spaceless_string,
+            self._check_sanity('day_and_shifts_string', spaceless_string,
                 columnname = columnname, line_num = line_num)
             
             # Remove the last '#' AFTER the sanity check
@@ -151,15 +151,14 @@ class Volunteer:
         Assign the values to the an instance of class 'Person'.
         Return a list of the instances 'Person'.
         """
+        
+        # Peform some basic tests to validate the sourcefile.
         with open(infile, newline ="") as f:
-            dialect = csv.Sniffer().sniff(f.read(1024))
-            #TODO bij Error("Could not determine delimiter")
-            # is het bronbestand zonder string-delimiter!
-            # reraise? En dit melden
+            dialect = csv.Sniffer().sniff(f.read(40))
             if dialect.delimiter != const.CSV_DELIMITER:
                 raise exceptions.InvalidSourceFile('Het veld-scheidingteken is niet ";".')
             f.seek(0)
-            if not csv.Sniffer().has_header(f.read(1024)):
+            if not csv.Sniffer().has_header(f.read(40)):
                 raise exceptions.InvalidSourceFile('Kolomkoppen ontbreken.')
             f.seek(0)
 
@@ -241,7 +240,7 @@ class Volunteer:
                     exit()
         return tuple(volunteers)
 
-    def _sanity_check(self, test, operand = None, 
+    def _check_sanity(self, test, operand = None, 
                       columnname = None, line_num = None):
         """Check the validity of the input data."""
         
