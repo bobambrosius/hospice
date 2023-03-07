@@ -97,18 +97,34 @@ class Scheduler:
         """Update agenda_item.persons with 2 person names.
         One of type caretaker and one of type generalist.
         """
+        # TODO Als iemand een voorkeur heeft voor meerdere shifts,
+        # dan wordt nu altijd de eerstgevonden shift gekozen. Kan dit random?
         def helper_pref_person(service, diff_group):
+            candidates = []
             persons = [ p for p in self.volunteers 
-                if p.preferred_shifts 
-                and p.service == service ]
+                        if p.preferred_shifts 
+                        and p.service == service ]
             for person in persons:
                 if person.name in diff_group:
                     for pref_weekday, pref_shifts\
                             in person.preferred_shifts.items():
+                        
+                        # It is possible that more than 1 volunteer
+                        # has a preference for the same day and shift.
+                        # Make a list, and randomly choose one name later.
+                        # And if a person has more than 1 shift preference
+                        # on the day, then randomly select 1 shift.
+                        # Otherwise the scheduler would always pick
+                        # the first day.
                         if (agenda_item.weekday == pref_weekday
-                                and agenda_item.shift in pref_shifts ):
-                            return person.name
-            return None
+                                and agenda_item.shift 
+                                in random.sample(pref_shifts,1)): 
+                            candidates.append(person.name)
+            if candidates:
+                [ selected ] = random.sample(candidates, 1)
+                return selected
+            else:
+                return None
 
         # Do not schedule on a holyday
         if agenda_item.date in self.holydays:

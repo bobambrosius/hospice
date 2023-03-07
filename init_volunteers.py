@@ -65,7 +65,7 @@ class Volunteer:
         self.sourcefilename = sourcefilename
         print(f'Bestand lezen: "{self.sourcefilename}"...')
 
-        # self.persons is a list op namedtuples 'Person'
+        # self.persons is a tuple with instances of class 'Person'
         self.persons = self._get_volunteers(self.sourcefilename)
         self._check_sanity("duplicate_names")
 
@@ -187,11 +187,11 @@ class Volunteer:
                         name = (csv_data.Voornaam.strip()
                             + tussenvoegsel + " " + csv_data.Achternaam.strip())
 
-                        # Column NietOpDienstPerWeekdag
+                        # Column NietOpDagEnDienst
                         not_on_shifts_per_weekday = (
                             self.day_and_shifts_to_dict(
-                            csv_data.NietOpDienstPerWeekdag,
-                            'NietOpDienstPerWeekdag', reader.line_num) 
+                            csv_data.NietOpDagEnDienst,
+                            'NietOpDagEnDienst', reader.line_num) 
                             )
                         
                         # Column VoorkeurDagEnDienst
@@ -251,10 +251,13 @@ class Volunteer:
                      if value == name ]
         
         def check_day_and_shifts_string(operand):
-            # There are no spaces in the operand
-            # and the operand does not end with a '#'.
-            # operand example: di:1,2,3# wo:1,2,3# do:1,2,3# vr:1,2,3
+            # There are no spaces in the operand.
+            # operand example: di:1,2,3# wo:1,2,3# do:1,2,3# vr:1,2,3#
             
+            # The operand does not end with a '#'.
+            if operand[-1] != "#":
+                return None
+
             # The pattern is
             # weekday + ':'
             #   + comma seperated shiftnumber e.g (1,2,3,4) or (1,2) or (3)
