@@ -20,10 +20,6 @@ class Planningelement:
         self.persons = []           
         # persons_not_avlbl: set of persons not available for this shift.
         self.persons_not_avlbl = set()  
-        # persons_not_avlbl_1_day: persons_not_available for 1 day.
-        # We need this separate because of weekend planning.
-        # TODO continue explanation
-        self.persons_not_avlbl_1_day = set()
         # Why a set? Because several functions add a person 
         #   to the set, and the same person must not be added twice.
         
@@ -34,8 +30,7 @@ class Planningelement:
             f"weekday: {self.weekday}, "
             f"shift: {self.shift}, "
             f"persons: {self.persons}, "
-            f"persons_not_avlbl: {self.persons_not_avlbl}, "
-            f"persons_not_avlbl_1_day: {self.persons_not_avlbl_1_day}"
+            f"persons_not_avlbl: {self.persons_not_avlbl}"
         )
 
 

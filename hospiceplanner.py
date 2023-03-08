@@ -28,6 +28,8 @@ class Scheduler:
         self.year = year
         self.quarter = quarter
         self.agenda = agenda
+        
+        self.v = volunteers
         # We use 'all_' in the name, for we have subgroups
         self.volunteers = volunteers.persons 
 
@@ -63,6 +65,7 @@ class Scheduler:
             if agenda_item.weeknr != self.currentweek:
                 self.currentweek = agenda_item.weeknr
                 self._reset_avlblty_counter()
+                self._update_weekend_counter()
 
             group_not_available = (
                 self._determine_group_not_available(agenda_item))
@@ -74,12 +77,22 @@ class Scheduler:
         # Exclude the persons that are marked as not available for this shift
         # from the planning capacity
         group_not_available = set( tuple(agenda_item.persons_not_avlbl) )
-        group_not_available.update(set( tuple(agenda_item.persons_not_avlbl_1_day) ))
 
         # Also not available are the persons with avlblty_counter = 0
-        dynamic_not_available = set(tuple([ p.name 
-            for p in self.volunteers 
-            if p.avlblty_counter == 0 ]))
+        # EXCEPT in the weekends. 
+        # Each volunteer must take 1 weekendshift per 4 weeks.
+        # If weekend_counter is not exactly 4, 
+        # then the person is not available.
+        if agenda_item.date.isoweekday() in (6,7):
+            dynamic_not_available = set(tuple([ p.name 
+                for p in self.volunteers 
+                if p.weekend_counter != 4 ]))
+            pass
+        else:
+            dynamic_not_available = set(tuple([ p.name 
+                for p in self.volunteers 
+                if p.avlblty_counter == 0 ]))
+
         group_not_available.update(dynamic_not_available)
         
         # Also not available are persons with a preference, 
@@ -98,9 +111,10 @@ class Scheduler:
         """Update agenda_item.persons with 2 person names.
         One of type caretaker and one of type generalist.
         """
-        # TODO Als iemand een voorkeur heeft voor meerdere shifts,
-        # dan wordt nu altijd de eerstgevonden shift gekozen. Kan dit random?
         def helper_pref_person(service, diff_group):
+            """If a person has a preference for a weekday-and-shift,
+            that person is here chosen before others.
+            """
             candidates = []
             persons = [ p for p in self.volunteers 
                         if p.preferred_shifts 
@@ -112,7 +126,7 @@ class Scheduler:
                         
                         # It is possible that more than 1 volunteer
                         # has a preference for the same day and shift.
-                        # Make a list, and randomly choose one name later.
+                        # Make a list, and randomly choose one name at return.
                         # And if a person has more than 1 shift preference
                         # on the day, then randomly select 1 shift.
                         # Otherwise the scheduler would always pick
@@ -172,6 +186,14 @@ class Scheduler:
         
         agenda_item.persons.append(person_caretaker)
         agenda_item.persons.append(person_generic)
+        
+        # The volunteer is scheduled in a weekend.
+        # Reset the weekend counter.
+        a = agenda_item.date.isoweekday()
+        if agenda_item.date.isoweekday() in (6,7):
+            persons = self.v.find([person_caretaker, person_generic])
+            for p in persons:
+                p.weekend_counter = 0
 
     def _update_persons_not_avlbl(self, current_agenda_item):
 
@@ -225,7 +247,7 @@ class Scheduler:
         # Now we must add persons to the set "persons_not_avlbl" of the
         # current and next day, so that no person is scheduled 
         # for two shifts or days in a row or for two shifts in one day.
-        # Note: In the current agenda item this person is also registered 
+        # Note: This person is also registered in the CURRENT agenda shift 
         #   in 'not_available', but it doesn't matter any more 
         #   for that shift is already sheduled.
         
@@ -244,7 +266,7 @@ class Scheduler:
         for item in ag_items:
             for person_name in current_agenda_item.persons:
                 # '.persons' is: [person_generic, person_caretaker]
-                item.persons_not_avlbl_1_day.add(person_name)
+                item.persons_not_avlbl.add(person_name)
 
         all_week_not_available(3,2)
         all_week_not_available(2,3)
@@ -252,15 +274,27 @@ class Scheduler:
 
     def _update_avlblty_counter(self, agenda_item):
         # Decrease avlblty_counter for the current week.
-        # We need the objects heer, not just te names
+        # We need the objects here, not just te names
         persons = [ p for p in self.volunteers 
-            if p.name in agenda_item.persons ]
+                    if p.name in agenda_item.persons ]
         # persons = 
         #   [instance of a person_generic, instance of a person_caretaker]
         for p in persons:
             # Prevent counting below zero. 
             # Use max() which return the maximum value of two.
             p.avlblty_counter = max(0, p.avlblty_counter-1)
+
+    def _update_weekend_counter(self):
+        """Every 4 weeks a volunteer must participate in a pool for 
+        weekend scheduling. When a person has been scheduled,
+        the weekend_counter is set to 0. At the start of a new 
+        week the scheduler increments the weekend_counter.
+        """
+        pass
+        for person in self.volunteers:
+            # Prevent counting above 4.
+            person.weekend_counter = min(4, person.weekend_counter + 1)
+        pass
 
     def _reset_avlblty_counter(self):
         # A volunteer must not be in more shifts 

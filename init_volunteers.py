@@ -227,7 +227,7 @@ class Volunteer:
                         avlblty_counter = shifts_per_weeks["shiftcount"]
                         
                         # weekend counter (no column)
-                        # Initially everybody is available foor weekends
+                        # Initially everybody is available for weekends
                         weekend_counter = 4
 
                         # Column NietInPeriode
