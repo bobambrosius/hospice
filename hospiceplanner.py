@@ -351,11 +351,6 @@ class Scheduler:
     def save_agenda_as_csv(self, filename):
         """Save the agenda to the csv file named <filename>
         """
-        shiftnumber_label_lookup = {
-            1: "7-11 uur",
-            2: "11-15 uur",
-            3: "15-19 uur",
-            4: "19-23 uur" }
         dateformat = "%-d %b" # day - short monthname
         
         with open(filename, 'w') as f:
@@ -404,7 +399,7 @@ class Scheduler:
                 for shift in range(1,5):
                     caretakers = [ i.persons[0] 
                         for i in ag_items if i.shift == shift ]
-                    row = ["", shiftnumber_label_lookup[shift]]
+                    row = ["", const.SHIFTNUMBER_LABEL_LOOKUP[shift]]
                     row.extend(list(map(no_volunteer_in_shift, caretakers)))
                     writer.writerow(row) 
                     generalists = [ i.persons[1] 
