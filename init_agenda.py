@@ -3,6 +3,42 @@ from datetime import timedelta
 from datetime import datetime
 import const
 
+
+class Planningelement:
+    """An instance of class Planningelement 
+    holds methods and information for one shift of which there are 4 in a day.
+    We cannot use namedtuples here because the contents will be changed later.
+    """
+    def __init__(self):
+        self.date = 'date_object'
+        # shift: string. '1' = 7:00-11:00, '2' = 11:00-15:00, 
+        #   '3' = 15:00-19:00, '4' = 19:00-23:00
+        self.shift = ''             
+        self.weeknr = 0             # int. 1-52
+        self.weekday = 0            # int. isoweekday: 1 = monday. 
+        # persons: list of persons in this shift. Max two volunteers
+        self.persons = []           
+        # persons_not_avlbl: set of persons not available for this shift.
+        self.persons_not_avlbl = set()  
+        # persons_not_avlbl_1_day: persons_not_available for 1 day.
+        # We need this separate because of weekend planning.
+        # TODO continue explanation
+        self.persons_not_avlbl_1_day = set()
+        # Why a set? Because several functions add a person 
+        #   to the set, and the same person must not be added twice.
+        
+    def __repr__(self):
+        return (
+            f"date: {self.date}, "
+            f"weeknr: {self.weeknr}, "
+            f"weekday: {self.weekday}, "
+            f"shift: {self.shift}, "
+            f"persons: {self.persons}, "
+            f"persons_not_avlbl: {self.persons_not_avlbl}, "
+            f"persons_not_avlbl_1_day: {self.persons_not_avlbl_1_day}"
+        )
+
+
 class Agenda:
     """
     Has items. This is a list of instances of class Planningelement.
@@ -129,34 +165,6 @@ class Agenda:
         # is the day before monday, so subtract 1 day.
         return startday, endday - timedelta(days = 1) 
 
-class Planningelement:
-    """An instance of class Planningelement 
-    holds methods and information for one shift of which there are 4 in a day.
-    We cannot use namedtuples here because the contents will be changed later.
-    """
-    def __init__(self):
-        self.date = 'date_object'
-        # shift: string. '1' = 7:00-11:00, '2' = 11:00-15:00, 
-        #   '3' = 15:00-19:00, '4' = 19:00-23:00
-        self.shift = ''             
-        self.weeknr = 0             # int. 1-52
-        self.weekday = 0            # int. isoweekday: 1 = monday. 
-        # persons: list of persons in this shift. Max two volunteers
-        self.persons = []           
-        # persons_not_available: set of persons not allowed in this shift.
-        self.persons_not_available = set()  
-        # Why a set? Because several functions add a person 
-        #   to the set, and the same person must not be added twice.
-        
-    def __repr__(self):
-        return (
-            f"date: {self.date}, "
-            f"weeknr: {self.weeknr}, "
-            f"weekday: {self.weekday}, "
-            f"shift: {self.shift}, "
-            f"persons: {self.persons}, "
-            f"persons_not_available: {self.persons_not_available}"
-        )
 
 if __name__ == '__main__':
     agenda = Agenda(year=2023, quarter=1)

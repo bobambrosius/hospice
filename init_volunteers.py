@@ -25,13 +25,21 @@ class Person:
         doesn't want to be scheduled.
     .preferred_shifts:
         Some volunteers prefer to be scheduled on a specific day and shift.
-    .availability_counter: 
+    .avlblty_counter: 
         The number of times that the person 
         is available for scheduling per one or more weeks.
         The counter is initialised with shifts_per_week['shiftcount'].
         The counter is reduced by 1 when a scheduling happens for the person.
         The counter is reset at the start of scheduling a new week 
         if the value is 0.
+    .weekend_counter:
+        Each person is obligated to run a shift in the weekend once a month.
+        The counter has to be 4 for the person to be eligible for
+        schediling in a weekend.
+        When a person is scheduled in a weekend, the weekend_counter is
+        reset to zero. At the start of scheduling a new week, 
+        the counter is incremented by 1. While the counter is not yet 4,
+        the person is not available for scheduling in the weekend.
     """
 
     def __init__(self):
@@ -41,7 +49,8 @@ class Person:
         self.not_on_shifts_per_weekday = dict()
         self.not_in_timespan = [] # a tuple after reading data
         self.preferred_shifts = dict()
-        self.availability_counter = 0 
+        self.avlblty_counter = 0 
+        self.weekend_counter = 4
 
     def __repr__(self):
         return(
@@ -51,7 +60,9 @@ class Person:
             f'not_on_shifts_per_weekday: {self.not_on_shifts_per_weekday}, '
             f'not_in_timespan: {self.not_in_timespan}, '
             f'preferred_shifts: {self.preferred_shifts}, '
-            f'availability_counter: {self.availability_counter}')
+            f'avlblty_counter: {self.avlblty_counter}, '
+            f'weekend_counter: {self.weekend_counter}'
+        )
 
 
 class Volunteer:
@@ -212,8 +223,12 @@ class Volunteer:
                             "per_weeks": int( shifts_per_week[1] ) 
                             }
 
-                        # availability_counter (no column)
-                        availability_counter = shifts_per_weeks["shiftcount"]
+                        # avlblty_counter (no column)
+                        avlblty_counter = shifts_per_weeks["shiftcount"]
+                        
+                        # weekend counter (no column)
+                        # Initially everybody is available foor weekends
+                        weekend_counter = 4
 
                         # Column NietInPeriode
                         not_in_timespan = []
@@ -232,7 +247,8 @@ class Volunteer:
                         person.shifts_per_weeks = shifts_per_weeks
                         person.not_in_timespan = not_in_timespan
                         person.preferred_shifts = prefs_dict
-                        person.availability_counter = availability_counter
+                        person.avlblty_counter = avlblty_counter
+                        person.weekend_counter = weekend_counter
                         volunteers.append(person)
                 #TODO The value error still comes 
                 # from namedtuple("data", next(reader))!
