@@ -356,12 +356,9 @@ class Scheduler:
         with open(filename, 'w') as f:
             writer = csv.writer(f, delimiter=const.CSV_DELIMITER, 
                 quotechar='"', quoting=csv.QUOTE_ALL)
-            writer.writerow(["","","","","", 
-                             "Jaar: " + str(self.year)])
-            writer.writerow(["","","","","", 
-                             "Kwartaal: " + str(self.quarter)])
-            writer.writerow(["","","","","", 
-                             "versie: " + "1"])
+            writer.writerow(["Jaar: " + str(self.year)])
+            writer.writerow(["Kwartaal: " + str(self.quarter)])
+            writer.writerow(["versie: " + "1"])
             #writer.writerow(["Productiedatum", datetime.now()])
             writer.writerow([])
             
@@ -371,22 +368,26 @@ class Scheduler:
                 (self.quarter -1) * weekscount +1, 
                 (self.quarter * weekscount) + 1 )
 
-            for week in weekrange:
-                for i in range(1,5): writer.writerow([])
-                writer.writerow(["","","","","", "WEEK " + str(week)])
+            for pagebreak_indicator, week in enumerate(weekrange):
+                # Pagebreak after every two weeks
+                if pagebreak_indicator > 1 and not (pagebreak_indicator % 2):
+                    writer.writerow(["pagebreak"])
+
+                #for i in range(1,): writer.writerow([])
+                writer.writerow(["","","","", "WEEK " + str(week)])
                 writer.writerow([])
-                writer.writerow(["", "", "maandag", "dinsdag", "woensdag", 
+                writer.writerow(["", "maandag", "dinsdag", "woensdag", 
                     "donderdag", "vrijdag", "zaterdag", "zondag"])
                 
                 # get the agenda items for this week
-                ag_items = [ i for i in self.agenda.items 
+                ag_items = [i for i in self.agenda.items 
                             if i.weeknr == week ]
 
                 # row with dates, below 'week' indication
                 dates = OrderedSet(tuple(
                     datetime.strftime(i.date, dateformat) 
                     for i in ag_items))
-                row = ["", "dienst"]
+                row = ["dienst"]
                 row.extend(list(dates))
                 writer.writerow(row) 
                 
@@ -394,17 +395,18 @@ class Scheduler:
                 #   fill the cell with 'not available'
                 no_volunteer_in_shift = (
                     lambda person: '#N/A' if person == "" else person)
+
                 # A row for each shift, with the names of 
                 # 7 caretakers and 7 general service persons
                 for shift in range(1,5):
                     caretakers = [ i.persons[0] 
                         for i in ag_items if i.shift == shift ]
-                    row = ["", const.SHIFTNUMBER_LABEL_LOOKUP[shift]]
+                    row = [const.SHIFTNUMBER_LABEL_LOOKUP[shift]]
                     row.extend(list(map(no_volunteer_in_shift, caretakers)))
                     writer.writerow(row) 
                     generalists = [ i.persons[1] 
                         for i in ag_items if i.shift == shift ]
-                    row = ["", ""]
+                    row = [""]
                     row.extend(list(map(no_volunteer_in_shift, generalists)))
                     writer.writerow(row) 
                     writer.writerow([])
