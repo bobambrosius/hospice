@@ -45,7 +45,7 @@ class Agenda:
         self.quarter = quarter
         self.items = self._initialize() # planningelementlist
         
-    def finditem(self,  shift = None, weekday = None, timespan = None):
+    def finditem(self,  shift=None, weekday=None, timespan=None):
         """Find an instance of Planningelement.
         Search forward starting with startindex.
         Return an iterable of all the found planningelements.
@@ -101,7 +101,7 @@ class Agenda:
                     if self.items[i].date == currentdate:
                         # return all agenda items with this date
                         yield self.items[i] 
-                currentdate = currentdate + timedelta(days =1) # Next date
+                currentdate = currentdate + timedelta(days=1) # Next date
 
     def _initialize(self):
         """Create a list of instances of class Planningelement 
@@ -123,7 +123,7 @@ class Agenda:
                 element.weekday = currentday.isoweekday() # {1..7}
                 
                 planningelementlist.append(element)
-            currentday = currentday + timedelta(days = 1)
+            currentday = currentday + timedelta(days=1)
         return planningelementlist
 
     def _get_first_and_last_day_of_quarter(
@@ -152,13 +152,13 @@ class Agenda:
             operator = -1 # Subtract a day
 
         while startday.isoweekday() != 1:
-            startday = startday + timedelta(days = operator)
+            startday = startday + timedelta(days=operator)
         while endday.isoweekday() != 1:
-            endday = endday + timedelta(days = operator)
+            endday = endday + timedelta(days=operator)
             
         # The last day of the quarter 
         # is the day before monday, so subtract 1 day.
-        return startday, endday - timedelta(days = 1) 
+        return startday, endday - timedelta(days=1) 
 
 
 if __name__ == '__main__':

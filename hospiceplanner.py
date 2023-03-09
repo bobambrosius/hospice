@@ -11,6 +11,7 @@ import init_agenda
 import init_volunteers
 import const
 import holyday
+import statistics
 
 
 class Scheduler:
@@ -26,7 +27,7 @@ class Scheduler:
 
     def __init__(self, year, quarter, version, agenda, volunteers):
 
-        # Show month- and week names in Dutch
+        # Show month- and weeknames in Dutch
         # in agenda.csv file.
         locale.setlocale(locale.LC_TIME, "nl_NL.utf8")
 
@@ -200,60 +201,76 @@ class Scheduler:
                 p.weekend_counter = 0
 
     def _update_persons_not_avlbl(self, current_agenda_item):
-
-        #HELPER function:
-        def all_week_not_available(shiftcount, per_weeks):
-            # Only applicable in certain shifts_per_weeks combinations:
-            # (3,2) (2,3) (1,2), so more than 1 week.
-            # Explanation:
-            # If a person works e.g. 3 times per _2_ weeks
-            # then the 3 times must be distributed over 2 weeks.
-            # To prevent that a person gets a 3rd shift in 1 week,
-            # make the volunteer unavailable for (the rest of) the week.
-            # The same goes for 2 times in 3 weeks 
-            # and for 1 shift in two weeks.
+        
+        # HELPER function:
+        def all_week_not_available(shifts_per_weeks):
+            """
+            If a person works e.g. 3 times per *2* weeks
+            then the 3 times must be distributed over 2 weeks.
+            To prevent that a person gets a 3rd shift in 1 week,
+            make the volunteer unavailable for (the rest of) the week.
+            The same goes for 2 times in 3 weeks 
+            and for 1 shift in two weeks.
+            Applicable only in certain shifts_per_weeks combinations:
+            (3,2) (2,3) (1,2), so more than 1 week.
+            """
 
             # Get the instances of class Person for the 2 volunteers 
             # in this shift only if the conditions (see the code) are met.
             # Note: the availability counter must be exactly 1, 
             #   because only then already 2 shifts has been planned, 
-            #   of the three available shifts.
-            person_selection= [ 
-                    p for p in self.all_persons 
-                    if p.name in current_agenda_item.persons 
-                    and (p.shifts_per_weeks['shiftcount'] == shiftcount
-                        and p.shifts_per_weeks["per_weeks"] == per_weeks
-                        and p.avlblty_counter == 1)
-                ]
-            if person_selection:
-                # select all agenda items for this week
-                ag_items = [ i for i in self.agenda.items
-                            if i.weeknr == current_agenda_item.weeknr ]
-                # make the volunteers unavailable for this week
-                for item in ag_items:
-                    for p in person_selection:
-                            item.persons_not_avlbl.add(p.name)
-
-                # If 2 times per 3 weeks, then 
-                # make the next week also unavailable.
-                # Same for 1 time in 2 weeks.
-                if ( (shiftcount == 2 and per_weeks == 3)
-                        or (shiftcount == 1 and per_weeks ==2) ):
-                    # select all agenda items for the next  week
+            #   of the three available shifts
+            #   or 1 shift has been planned of the available 2 shifts.
+            for shiftcount, per_weeks in shifts_per_weeks: 
+                person_selection= [ 
+                        p for p in self.all_persons 
+                        if p.name in current_agenda_item.persons 
+                        and (p.shifts_per_weeks['shiftcount'] == shiftcount
+                            and p.shifts_per_weeks["per_weeks"] == per_weeks
+                            and p.avlblty_counter == 1)
+                    ]
+                if person_selection:
+                    # select all agenda items for this week
                     ag_items = [ i for i in self.agenda.items
-                                if i.weeknr == 
-                                current_agenda_item.weeknr + 1 ]
-                    # make the agenda items unavailable for this week
+                                if i.weeknr == current_agenda_item.weeknr ]
+                    # make the volunteers unavailable for this week
                     for item in ag_items:
                         for p in person_selection:
                                 item.persons_not_avlbl.add(p.name)
 
-        # Now we must add persons to the set "persons_not_avlbl" of the
-        # current and next day, so that no person is scheduled 
-        # for two shifts or days in a row or for two shifts in one day.
-        # Note: This person is also registered in the CURRENT agenda shift 
-        #   in 'not_available', but it doesn't matter any more 
-        #   for that shift is already sheduled.
+                    # If 2 times per 3 weeks, then 
+                    # make the next week also unavailable.
+                    # Same for 1 time in 2 weeks.
+                    if ( (shiftcount == 2 and per_weeks == 3)
+                            or (shiftcount == 1 and per_weeks ==2) ):
+                        # select all agenda items for the next  week
+                        ag_items = [ i for i in self.agenda.items
+                                    if i.weeknr == 
+                                    current_agenda_item.weeknr + 1 ]
+                        # make the agenda items unavailable for this week
+                        for item in ag_items:
+                            for p in person_selection:
+                                    item.persons_not_avlbl.add(p.name)
+
+        # Now we must add persons to "persons_not_avlbl" of the
+        # CURRENT and NEXT day, so that no person is scheduled 
+        # for two days in a row or for more than one shift on one day.
+        # Note: This person is also registered in the CURRENT agenda shift
+        #   in 'not_available', but that is no longer of interest
+        #   because the shift is already sheduled.
+        current_day = current_agenda_item.date
+        next_day = current_day + timedelta(days=1)
+        agenda_items = [ i for i in self.agenda.items
+                     if (i.date == current_day or i.date == next_day) ]
+        for item in agenda_items:
+            for person_name in current_agenda_item.persons:
+                # '.persons' is: [personname generic, personname caretaker]
+                item.persons_not_avlbl.add(person_name)
+
+        # Make the person unavailable for the rest of the week,
+        # because the capacity must be distributed
+        # over more than one week.
+        all_week_not_available( [(3,2),(2,3),(1,2)] )
         
         #TODO it is possible that a person has a shift 
         #   on the last day of the quarter.
@@ -263,18 +280,6 @@ class Scheduler:
         #   on the first day of the new quarter: two days in a row.
         #   Solution: register the date for the persons 
         #   in "nietInPeriode" in the csv source file.
-        current_day = current_agenda_item.date
-        next_day = current_day + timedelta(days = 1)
-        ag_items = [ i for i in self.agenda.items
-                     if (i.date == current_day or i.date == next_day) ]
-        for item in ag_items:
-            for person_name in current_agenda_item.persons:
-                # '.persons' is: [person_generic, person_caretaker]
-                item.persons_not_avlbl.add(person_name)
-
-        all_week_not_available(3,2)
-        all_week_not_available(2,3)
-        all_week_not_available(1,2)
 
     def _update_avlblty_counter(self, agenda_item):
         # Decrease avlblty_counter for the current week.
@@ -346,7 +351,7 @@ class Scheduler:
             # person.not_in_timespan: 
             #   e.g. [ '22-4-2023, 29-3-2023, 2-1-2023>3-1-2023' ]
             for timespan in person.not_in_timespan:
-                found_items = self.agenda.finditem(timespan = timespan)
+                found_items = self.agenda.finditem(timespan=timespan)
                 for item in found_items:
                     item.persons_not_avlbl.add(person.name)
 
@@ -494,24 +499,34 @@ def file_exists(filename, extension):
     else:
         return False
 
+def produce_statistics(volunteers,stats=False):
+    if stats:
+        caretaker_counts, generalist_counts = statistics.count_shifts_per_weeks(volunteers.persons)
+        print('Statistics:')
+        print(f'caretaker: {caretaker_counts}')
+        print(f'generalist: {generalist_counts}')
 
-def main(year, quarter, version, input_filename):
+
+def main(year, quarter, version, input_filename, stats=False):
     agenda = init_agenda.Agenda(year=year, quarter=quarter)
     volunteers = init_volunteers.Volunteer(input_filename)
     #volunteers.show_volunteers_info()
-    volunteers.show_volunteerscount()
     scheduler = Scheduler(year, quarter, version, agenda, volunteers) 
     
     # Start scheduling!
-    scheduler.schedule_volunteers() 
+    scheduler.schedule_volunteers()
+    
+    produce_statistics(volunteers, stats)
+
+    volunteers.show_volunteerscount()
+    
     outfilename = ('./hospice ' 
                    + str(quarter) + 'e kwartaal ' 
                    + str(year) 
                    + ' v. ' + str(version))
     #if file_exists(outfilename, '.csv'):
     #    exit()
-    if const.DEBUG:
-        scheduler.write_agenda_to_txt_file(outfilename + '.txt')
+    scheduler.write_agenda_to_txt_file(outfilename + '.txt')
     scheduler.write_agenda_to_csv_file(outfilename + '.csv')
     
     scheduler.persons_not_scheduled()
@@ -533,7 +548,9 @@ if __name__ == '__main__':
         help='welke versie', type=int)
     parser.add_argument("filename", 
         help='csv bestand met vrijwillergersgegevens')
+    parser.add_argument("-s", "--stats", action='store_true',
+        help = "Geef statistische gegevens weer over vrijwilligers")
     args = parser.parse_args()
     print("\nApplication arguments are: ", args)
-    main(args.year, args.quarter, args.version, args.filename)
+    main(args.year, args.quarter, args.version, args.filename, stats=args.stats)
     

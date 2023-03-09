@@ -188,7 +188,7 @@ class Volunteer:
         """
         
         # Peform some basic tests to validate the sourcefile.
-        with open(infile, newline ="") as f:
+        with open(infile, newline="") as f:
             dialect = csv.Sniffer().sniff(f.read(40))
             if dialect.delimiter != const.CSV_DELIMITER:
                 raise exceptions.InvalidSourceFile('Het veld-scheidingteken is niet ";".')
