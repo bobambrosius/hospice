@@ -27,7 +27,7 @@ class Person:
     .avlblty_counter: 
         The number of times that the person 
         is available for scheduling per one or more weeks.
-        The counter is initialised with shifts_per_week['shiftcount'].
+        The counter is initialised with shifts_per_week.shifts.
         The counter is reduced by 1 when a scheduling happens for the person.
         The counter is reset at the start of scheduling a new week 
         if the value is 0.
@@ -44,7 +44,7 @@ class Person:
     def __init__(self):
         self.name = "" 
         self.service = "" 
-        self.shifts_per_weeks = dict()
+        self.shifts_per_weeks = "" # namedtuple ShiftsPerWeeks
         self.not_on_shifts_per_weekday = dict()
         self.not_in_timespan = [] # a tuple after reading data
         self.preferred_shifts = dict()
@@ -55,7 +55,8 @@ class Person:
         return(
             f'name: {self.name}, '
             f'service: { self.service }, '
-            f'shifts_per_weeks: {self.shifts_per_weeks}, '
+            f'shifts_per_weeks: ({self.shifts_per_weeks.shifts},'
+            f'{self.shifts_per_weeks.per_weeks}), '
             f'not_on_shifts_per_weekday: {self.not_on_shifts_per_weekday}, '
             f'not_in_timespan: {self.not_in_timespan}, '
             f'preferred_shifts: {self.preferred_shifts}, '
@@ -70,8 +71,9 @@ class Volunteer:
         A set of objects of type Person who's service is generic
     .group caretaker:
         A set of objects of type Person who's service is caretaking"""
-
+    
     def __init__(self, sourcefilename):
+
         self.sourcefilename = sourcefilename
         print(f'Bestand lezen: "{self.sourcefilename}"...')
 
@@ -193,6 +195,7 @@ class Volunteer:
             f.seek(0)
 
         volunteers = []
+        ShiftsPerWeeks = namedtuple('ShiftsPerWeeks', 'shifts per_weeks')
         with open(infile, newline="") as f:
             #TODO check that the DELIMITER value is not used in the cells
             reader = csv.reader(f, delimiter=const.CSV_DELIMITER)
@@ -235,16 +238,15 @@ class Volunteer:
                             )
                         
                         # Column DienstenPerAantalWeken
-                        # shifts_per_weeks dictionary
+                        # shifts_per_weeks namedtuple
                         shifts_per_week = (
                             csv_data.DienstenPerAantalWeken.replace(" ","").split(","))
-                        shifts_per_weeks = {
-                            "shiftcount": int( shifts_per_week[0] ), 
-                            "per_weeks": int( shifts_per_week[1] ) 
-                            }
+                        shifts_per_weeks = ShiftsPerWeeks(
+                                int( shifts_per_week[0] ),
+                                int( shifts_per_week[1] ))
 
                         # avlblty_counter (no column)
-                        avlblty_counter = shifts_per_weeks["shiftcount"]
+                        avlblty_counter = shifts_per_weeks.shifts
                         
                         # weekend counter (no column)
                         # Initially everybody is available for weekends
@@ -324,6 +326,6 @@ class Volunteer:
 if __name__ == '__main__':
     csv_filename = 'vrijwilligers-2023-kw2.csv'
     group = Volunteer(csv_filename)
-    #group.show_volunteers_data()
+    group.show_volunteers_data()
     group.show_volunteerscount()
     group.show_days_and_shifts_count()

@@ -207,7 +207,7 @@ class Scheduler:
         in 'not_available', but that is no longer of interest
         because the shift is already sheduled."""
 
-        def all_week_not_available(shifts_per_weeks):
+        def all_week_not_available(shifts_per_weeks_argument):
             """HELPER function for _update_persons_not_avlbl().
             If a person works e.g. 3 times per *2* weeks
             then the 3 times must be distributed over 2 weeks.
@@ -224,12 +224,12 @@ class Scheduler:
             #   because only then already 2 shifts has been planned, 
             #   of the three available shifts
             #   or 1 shift has been planned of the available 2 shifts.
-            for shiftcount, per_weeks in shifts_per_weeks: 
+            for shiftcount, per_weeks in shifts_per_weeks_argument: 
                 person_selection= [ 
                         p for p in self.all_persons 
                         if p.name in current_agenda_item.persons 
-                        and (p.shifts_per_weeks['shiftcount'] == shiftcount
-                            and p.shifts_per_weeks["per_weeks"] == per_weeks
+                        and (p.shifts_per_weeks.shifts == shiftcount
+                            and p.shifts_per_weeks.per_weeks == per_weeks
                             and p.avlblty_counter == 1)
                     ]
                 if person_selection:
@@ -312,11 +312,11 @@ class Scheduler:
             if person.avlblty_counter == 0:
                 # EXCEPT when a person's preference is 1x per 2 weeks.
                 # Then the reset is done every ODD week. 
-                if not ( person.shifts_per_weeks['shiftcount'] == 1 
-                        and person.shifts_per_weeks['per_weeks'] == 2
+                if not ( person.shifts_per_weeks.shifts == 1 
+                        and person.shifts_per_weeks.per_weeks == 2
                         and self.currentweek % 2 ):
                     person.avlblty_counter = (
-                        person.shifts_per_weeks["shiftcount"])
+                        person.shifts_per_weeks.shifts)
 
     def _apply_static_rules(self):
         """Initialise the agenda data 'persons not_available' 
