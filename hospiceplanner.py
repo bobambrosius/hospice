@@ -63,14 +63,11 @@ class Scheduler:
         # that the private functions operate on the agenda_item.
         for agenda_item in self.agenda.items:
             # Reset the availability of all persons at the start of each week
-            #TODO in plaats van moeilijk steeds onderzoeken of het 
-            #       volgende weeknummer is aangebroken kunnen we 
-            #       misschien beter over de 13 weeknummers itereren.
-
+            
             # Is the scheduler starting a new week?
             if agenda_item.weeknr != self.currentweek:
                 self.currentweek = agenda_item.weeknr
-                self._reset_avlblty_counter()
+                self._reset_avlblty_counter(self.currentweek)
                 self._update_weekend_counter()
 
             group_not_available = (
@@ -301,7 +298,7 @@ class Scheduler:
             # Prevent counting above 4.
             person.weekend_counter = min(4, person.weekend_counter + 1)
 
-    def _reset_avlblty_counter(self):
+    def _reset_avlblty_counter(self, currentweek):
         """A volunteer must not be in more shifts 
         than is indicated in his/her shifts_per_weeks preference.
         At the start of each week, reset the avlblty_counter 
@@ -314,7 +311,7 @@ class Scheduler:
                 # Then the reset is done every ODD week. 
                 if not ( person.shifts_per_weeks.shifts == 1 
                         and person.shifts_per_weeks.per_weeks == 2
-                        and self.currentweek % 2 ):
+                        and currentweek % 2 ):
                     person.avlblty_counter = (
                         person.shifts_per_weeks.shifts)
 
