@@ -80,8 +80,8 @@ class Scheduler:
             self._update_persons_not_avlbl(agenda_item)
 
     def _determine_group_not_available(self, agenda_item):
-        # Exclude the persons that are marked as not available for this shift
-        # from the planning capacity
+        """Exclude the persons that are marked as not available for this shift
+        from the planning capacity."""
         group_not_available = set( tuple(agenda_item.persons_not_avlbl) )
 
         # Also not available are the persons with avlblty_counter = 0
@@ -194,17 +194,21 @@ class Scheduler:
         
         # The volunteer is scheduled in a weekend.
         # Reset the weekend counter.
-        a = agenda_item.date.isoweekday()
         if agenda_item.date.isoweekday() in (6,7):
             persons = self.Volunteers.find([person_caretaker, person_generic])
             for p in persons:
                 p.weekend_counter = 0
 
     def _update_persons_not_avlbl(self, current_agenda_item):
-        
-        # HELPER function:
+        """Add persons to "persons_not_avlbl" of the
+        CURRENT and NEXT day, so that no person is scheduled 
+        for two days in a row or for more than one shift on one day.
+        Note: This person is also registered in the CURRENT agenda shift
+        in 'not_available', but that is no longer of interest
+        because the shift is already sheduled."""
+
         def all_week_not_available(shifts_per_weeks):
-            """
+            """HELPER function for _update_persons_not_avlbl().
             If a person works e.g. 3 times per *2* weeks
             then the 3 times must be distributed over 2 weeks.
             To prevent that a person gets a 3rd shift in 1 week,
@@ -212,8 +216,7 @@ class Scheduler:
             The same goes for 2 times in 3 weeks 
             and for 1 shift in two weeks.
             Applicable only in certain shifts_per_weeks combinations:
-            (3,2) (2,3) (1,2), so more than 1 week.
-            """
+            (3,2) (2,3) (1,2), so more than 1 week."""
 
             # Get the instances of class Person for the 2 volunteers 
             # in this shift only if the conditions (see the code) are met.
@@ -252,12 +255,6 @@ class Scheduler:
                             for p in person_selection:
                                     item.persons_not_avlbl.add(p.name)
 
-        # Now we must add persons to "persons_not_avlbl" of the
-        # CURRENT and NEXT day, so that no person is scheduled 
-        # for two days in a row or for more than one shift on one day.
-        # Note: This person is also registered in the CURRENT agenda shift
-        #   in 'not_available', but that is no longer of interest
-        #   because the shift is already sheduled.
         current_day = current_agenda_item.date
         next_day = current_day + timedelta(days=1)
         agenda_items = [ i for i in self.agenda.items
@@ -282,8 +279,9 @@ class Scheduler:
         #   in "nietInPeriode" in the csv source file.
 
     def _update_avlblty_counter(self, agenda_item):
-        # Decrease avlblty_counter for the current week.
-        # We need the objects here, not just te names
+        """Decrease avlblty_counter for the current week."""
+        
+        #We need the objects here, not just te names.
         persons = [ p for p in self.all_persons 
                     if p.name in agenda_item.persons ]
         # persons = 
@@ -297,28 +295,26 @@ class Scheduler:
         """Every 4 weeks a volunteer must participate in a pool for 
         weekend scheduling. When a person has been scheduled,
         the weekend_counter is set to 0. At the start of a new 
-        week the scheduler increments the weekend_counter.
-        """
+        week the scheduler increments the weekend_counter."""
+        
         for person in self.all_persons:
             # Prevent counting above 4.
             person.weekend_counter = min(4, person.weekend_counter + 1)
 
     def _reset_avlblty_counter(self):
-        # A volunteer must not be in more shifts 
-        #   than is indicated in his/her shifts_per_weeks preference.
-        # At the start of each week, reset the avlblty_counter 
-        #   with the number of shifts that the person 
-        #   is willing to work in a week.
+        """A volunteer must not be in more shifts 
+        than is indicated in his/her shifts_per_weeks preference.
+        At the start of each week, reset the avlblty_counter 
+        with the number of shifts that the person 
+        is willing to work in a week."""
+
         for person in self.all_persons:
-            do_reset = True
             if person.avlblty_counter == 0:
                 # EXCEPT when a person's preference is 1x per 2 weeks.
                 # Then the reset is done every ODD week. 
-                if ( person.shifts_per_weeks['shiftcount'] == 1 
+                if not ( person.shifts_per_weeks['shiftcount'] == 1 
                         and person.shifts_per_weeks['per_weeks'] == 2
                         and self.currentweek % 2 ):
-                    do_reset = False
-                if do_reset:
                     person.avlblty_counter = (
                         person.shifts_per_weeks["shiftcount"])
 
@@ -327,8 +323,8 @@ class Scheduler:
         with the preferences of each volunteer i.e.
         persons who don't want to be in a certain shift,
         or who don't want to work on a certain day of the week,
-        or who don't want to work on specific dates.
-        """
+        or who don't want to work on specific dates."""
+
         for person in self.all_persons:
             # person is not working on a specific day of week
             # on a specific shift
@@ -356,8 +352,8 @@ class Scheduler:
                     item.persons_not_avlbl.add(person.name)
 
     def write_agenda_to_csv_file(self, filename):
-        """Write the agenda to the csv file named <filename>
-        """
+        """Write the agenda to the csv file <filename>."""
+        
         dateformat = "%-d %b" # day - short monthname
         
         with open(filename, 'w') as f:
@@ -420,6 +416,8 @@ class Scheduler:
             print(f'Bestand opgeslagen: {filename}')
 
     def write_agenda_to_txt_file(self, filename):
+        """Write the agenda to the txt file <filename>"""
+
         with open(filename, 'w') as f:
             weekday_nr = 0
             date = ''
@@ -450,8 +448,8 @@ class Scheduler:
 
     def persons_not_scheduled_in_weekend(self):
         """After de schedule is finished, determine which persons
-        are not scheduled in the weekend.
-        """
+        are not scheduled in the weekend."""
+
         scheduled_volunteers = set()
         for ag_item in self.agenda.items:
             if ag_item.weekday in (6,7):
@@ -470,8 +468,8 @@ class Scheduler:
          
     def persons_not_scheduled(self):
         """After de schedule is finished, determine if the capacity
-        of the full group of volunteers have been used.
-        """
+        of the full group of volunteers has been used."""
+
         scheduled_volunteers = set()
         for ag_item in self.agenda.items:
             for person_name in ag_item.persons:
@@ -537,9 +535,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(
             description='Agenda planner voor hospice, Rijssen',
             formatter_class=argparse.RawDescriptionHelpFormatter,
-            epilog=textwrap.dedent('''Voorbeeld:
-            python hospiceplanner.py 2023 4 1 vrijwilligers-2023-kw1.csv
-        '''))
+            epilog=textwrap.dedent(
+            '''Voorbeeld:
+                python hospiceplanner.py 2023 4 1 vrijwilligers-2023-kw1.csv
+            ''')
+        )
     parser.add_argument('year', 
         help='voor wel jaar de planning gemaakt moet worden', type=int)
     parser.add_argument('quarter', 

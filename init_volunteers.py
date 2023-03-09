@@ -7,8 +7,7 @@ import exceptions
 
 
 class Person:
-    """
-    A Person is a human being.
+    """A Person is a human being.
     .name: 
         Full name of the person e.g. "John Doe".
     .service: 
@@ -70,8 +69,8 @@ class Volunteer:
     .group_generic:
         A set of objects of type Person who's service is generic
     .group caretaker:
-        A set of objects of type Person who's service is caretaking
-    """
+        A set of objects of type Person who's service is caretaking"""
+
     def __init__(self, sourcefilename):
         self.sourcefilename = sourcefilename
         print(f'Bestand lezen: "{self.sourcefilename}"...')
@@ -100,8 +99,7 @@ class Volunteer:
             ]))
 
     def find(self, namelist):
-        """Return all instances of Volunteer in namelist.
-        """
+        """Return all instances of Volunteer in namelist."""
         result = []
         for name in namelist:
             for person in self.persons:
@@ -110,9 +108,8 @@ class Volunteer:
         return result
     
     def show_days_and_shifts_count(self):
-        # sum the count_of_shifts for each person
-        count_caretaker = {}
-        count_generalist = {}
+        """Sum the count_of_shifts for each person"""
+
         count = {}
         innercount = {}
         for service in ('verzorger', 'algemeen'):
@@ -145,12 +142,11 @@ class Volunteer:
             print(p)
 
     def day_and_shifts_to_dict(self, day_and_shifts_string, columnname, line_num):
-        """
-        The day_and_shifts_string is for example 'ma:1, 2,3,4#  wo:3,4 # zo:4.'
+        """The day_and_shifts_string is for example 'ma:1, 2,3,4#  wo:3,4 # zo:4.'
         The function returns the dict: { 1: (1,2,3,4), 3: (3,4), 7: (4) }
         The weekddays are translated to isoweekday numbers,
-        and the shifts are in a tuple.
-        """
+        and the shifts are in a tuple."""
+
         if day_and_shifts_string:
             spaceless_string = day_and_shifts_string.replace(" ","")
             
@@ -184,8 +180,7 @@ class Volunteer:
         The attributes are extracted from the column names.
         Read the values from the csv file.
         Assign the values to the an instance of class 'Person'.
-        Return a list of the instances 'Person'.
-        """
+        Return a list of the instances 'Person'."""
         
         # Peform some basic tests to validate the sourcefile.
         with open(infile, newline="") as f:
@@ -220,7 +215,8 @@ class Volunteer:
                         if csv_data.Tussenv.strip(): 
                             tussenvoegsel = " " + csv_data.Tussenv.strip()
                         name = (csv_data.Voornaam.strip()
-                            + tussenvoegsel + " " + csv_data.Achternaam.strip())
+                            + tussenvoegsel + " " 
+                            + csv_data.Achternaam.strip())
 
                         # Column NietOpDagEnDienst
                         not_on_shifts_per_weekday = (
