@@ -24,9 +24,10 @@ class Scheduler:
     Oh, and it can write the schedule to a csv file.
     """
 
-    def __init__(self, year, quarter, agenda, volunteers):
+    def __init__(self, year, quarter, version, agenda, volunteers):
         self.year = year
         self.quarter = quarter
+        self.version = version
         self.agenda = agenda
         
         self.v = volunteers
@@ -356,9 +357,9 @@ class Scheduler:
         with open(filename, 'w') as f:
             writer = csv.writer(f, delimiter=const.CSV_DELIMITER, 
                 quotechar='"', quoting=csv.QUOTE_ALL)
-            writer.writerow(["Jaar: " + str(self.year)])
-            writer.writerow(["Kwartaal: " + str(self.quarter)])
-            writer.writerow(["versie: " + "1"])
+            row = (f"Hospice planning {str(self.quarter)}e kwartaal "
+                   f'{str(self.year)}, versie {str(self.version)}')
+            writer.writerow([row])
             #writer.writerow(["Productiedatum", datetime.now()])
             writer.writerow([])
             
@@ -498,7 +499,7 @@ def main(year, quarter, version, input_filename):
     volunteers = init_volunteers.Volunteer(input_filename)
     #volunteers.show_volunteers_info()
     volunteers.show_volunteerscount()
-    scheduler = Scheduler(year, quarter, agenda, volunteers) 
+    scheduler = Scheduler(year, quarter, version, agenda, volunteers) 
     
     # Start scheduling!
     scheduler.schedule_volunteers() 
