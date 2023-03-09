@@ -92,7 +92,6 @@ class Scheduler:
             dynamic_not_available = set(tuple([ p.name 
                 for p in self.all_persons 
                 if p.weekend_counter != 4 ]))
-            pass
         else:
             dynamic_not_available = set(tuple([ p.name 
                 for p in self.all_persons 
@@ -295,11 +294,9 @@ class Scheduler:
         the weekend_counter is set to 0. At the start of a new 
         week the scheduler increments the weekend_counter.
         """
-        pass
         for person in self.all_persons:
             # Prevent counting above 4.
             person.weekend_counter = min(4, person.weekend_counter + 1)
-        pass
 
     def _reset_avlblty_counter(self):
         # A volunteer must not be in more shifts 
@@ -353,8 +350,8 @@ class Scheduler:
                 for item in found_items:
                     item.persons_not_avlbl.add(person.name)
 
-    def save_agenda_as_csv(self, filename):
-        """Save the agenda to the csv file named <filename>
+    def write_agenda_to_csv_file(self, filename):
+        """Write the agenda to the csv file named <filename>
         """
         dateformat = "%-d %b" # day - short monthname
         
@@ -417,7 +414,7 @@ class Scheduler:
                     writer.writerow([])
             print(f'Bestand opgeslagen: {filename}')
 
-    def save_agenda_as_txt(self, filename):
+    def write_agenda_to_txt_file(self, filename):
         with open(filename, 'w') as f:
             weekday_nr = 0
             date = ''
@@ -514,8 +511,8 @@ def main(year, quarter, version, input_filename):
     #if file_exists(outfilename, '.csv'):
     #    exit()
     if const.DEBUG:
-        scheduler.save_agenda_as_txt(outfilename + '.txt')
-    scheduler.save_agenda_as_csv(outfilename + '.csv')
+        scheduler.write_agenda_to_txt_file(outfilename + '.txt')
+    scheduler.write_agenda_to_csv_file(outfilename + '.csv')
     
     scheduler.persons_not_scheduled()
     scheduler.persons_not_scheduled_in_weekend()

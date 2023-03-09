@@ -132,7 +132,6 @@ class Volunteer:
         
         #indication = [ round(val/28, 2) for val in count_caretaker[service].values() ]
         #print(indication)    
-        pass
 
     def show_volunteerscount(self):
         print()
