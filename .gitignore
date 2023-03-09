@@ -1,5 +1,6 @@
 # Private
 backup20230225/
+doc/
 *.csv
 *.ods
 *.txt
