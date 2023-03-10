@@ -69,10 +69,10 @@ class Volunteers:
     """Volunteers is a collection of instances Person who work without
     fee for a hospice organisation.
     
-    .group_generic:
-        A set of instances Person who's service is generic.
-    .group caretaker:
-        A set of instances Person who's service is caretaking."""
+    .generalist_names:
+        A set of person names who's service is generic.
+    .caretaker_names:
+        A set of person names who's service is caretaking."""
     
     def __init__(self, sourcefilename):
 
@@ -91,12 +91,12 @@ class Volunteers:
         #        p.name 
         #        for p in self.persons 
         #        if p.service == 'algemeen']) )
-        self.group_generic = set(tuple( [
+        self.generalist_names = set(tuple( [
                 p.name
                 for p in self.persons
                 if p.service == 'algemeen'
             ]))
-        self.group_caretaker = set(tuple([ 
+        self.caretaker_names = set(tuple([ 
                 p.name
                 for p in self.persons
                 if p.service == 'verzorger'
@@ -113,8 +113,8 @@ class Volunteers:
     
     def show_count(self):
         print()
-        print(f'Er zijn {len(self.group_caretaker)} verzorgers beschikbaar.')
-        print(f'Er zijn {len(self.group_generic)} algemenen beschikbaar.')
+        print(f'Er zijn {len(self.caretaker_names)} verzorgers beschikbaar.')
+        print(f'Er zijn {len(self.generalist_names)} algemenen beschikbaar.')
         print()
 
     def show_data(self):

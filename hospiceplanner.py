@@ -42,8 +42,8 @@ class Scheduler:
         # en register the availability in each agenda item .
         self._apply_static_rules() 
 
-        self.group_generic = volunteers.group_generic
-        self.group_caretaker = volunteers.group_caretaker
+        self.generalist_names = volunteers.generalist_names
+        self.caretaker_names = volunteers.caretaker_names
         # first weeknr of the year quarter
         self.currentweek = self.agenda.items[0].weeknr 
         
@@ -150,9 +150,9 @@ class Scheduler:
             # The two volunteers for this shift 
             # are selected from two different pools
             diff_group_generic = tuple(
-                self.group_generic - group_not_available)
+                self.generalist_names - group_not_available)
             diff_group_caretaker = tuple(
-                self.group_caretaker - group_not_available)
+                self.caretaker_names - group_not_available)
                 
             # Select a random sample of 1 person 
             # as a list of 1 item from both sets.
@@ -497,7 +497,6 @@ def file_exists(filename, extension):
 def main(year, quarter, version, input_filename):
     agenda = init_agenda.Agenda(year=year, quarter=quarter)
     volunteers = init_volunteers.Volunteers(input_filename)
-    #volunteers.show_volunteers_info()
     scheduler = Scheduler(year, quarter, version, agenda, volunteers) 
     
     # Start scheduling!
