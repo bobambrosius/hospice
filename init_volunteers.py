@@ -65,7 +65,7 @@ class Person:
         )
 
 
-class Volunteer:
+class Volunteers:
     """A Volunteer is a Person who works without fee for the organisation hospicedereggestroom
     .group_generic:
         A set of objects of type Person who's service is generic
@@ -101,7 +101,7 @@ class Volunteer:
             ]))
 
     def find(self, namelist):
-        """Return all instances of Volunteer in namelist."""
+        """Return all found persons in the Volunteers collection in namelist."""
         result = []
         for name in namelist:
             for person in self.persons:
@@ -302,6 +302,6 @@ class Volunteer:
 
 if __name__ == '__main__':
     csv_filename = 'vrijwilligers-2023-kw2.csv'
-    group = Volunteer(csv_filename)
+    group = Volunteers(csv_filename)
     group.show_volunteers_data()
     group.show_volunteerscount()

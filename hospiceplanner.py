@@ -496,7 +496,7 @@ def file_exists(filename, extension):
 
 def main(year, quarter, version, input_filename):
     agenda = init_agenda.Agenda(year=year, quarter=quarter)
-    volunteers = init_volunteers.Volunteer(input_filename)
+    volunteers = init_volunteers.Volunteers(input_filename)
     #volunteers.show_volunteers_info()
     scheduler = Scheduler(year, quarter, version, agenda, volunteers) 
     
