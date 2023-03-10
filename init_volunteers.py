@@ -99,7 +99,7 @@ class Volunteers:
         self.caretaker_names = set(tuple([ 
                 p.name
                 for p in self.persons
-                if p.service == 'verzorger'
+                if p.service == 'verzorger' 
             ]))
 
     def find(self, namelist):

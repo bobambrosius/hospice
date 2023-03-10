@@ -152,7 +152,7 @@ class Scheduler:
             diff_group_generic = tuple(
                 self.generalist_names - group_not_available)
             diff_group_caretaker = tuple(
-                self.caretaker_names - group_not_available)
+                self.caretaker_names - group_not_available) 
                 
             # Select a random sample of 1 person 
             # as a list of 1 item from both sets.
