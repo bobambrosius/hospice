@@ -11,7 +11,6 @@ import init_agenda
 import init_volunteers
 import const
 import holyday
-import statistics
 
 
 class Scheduler:
@@ -494,15 +493,8 @@ def file_exists(filename, extension):
     else:
         return False
 
-def produce_statistics(volunteers,stats=False):
-    if stats:
-        caretaker_counts, generalist_counts = statistics.count_shifts_per_weeks(volunteers.persons)
-        print('Statistics:')
-        print(f'caretaker: {caretaker_counts}')
-        print(f'generalist: {generalist_counts}')
 
-
-def main(year, quarter, version, input_filename, stats=False):
+def main(year, quarter, version, input_filename):
     agenda = init_agenda.Agenda(year=year, quarter=quarter)
     volunteers = init_volunteers.Volunteer(input_filename)
     #volunteers.show_volunteers_info()
@@ -511,8 +503,6 @@ def main(year, quarter, version, input_filename, stats=False):
     # Start scheduling!
     scheduler.schedule_volunteers()
     
-    produce_statistics(volunteers, stats)
-
     volunteers.show_volunteerscount()
     
     outfilename = ('./hospice ' 
@@ -545,9 +535,7 @@ if __name__ == '__main__':
         help='welke versie', type=int)
     parser.add_argument("filename", 
         help='csv bestand met vrijwillergersgegevens')
-    parser.add_argument("-s", "--stats", action='store_true',
-        help = "Geef statistische gegevens weer over vrijwilligers")
     args = parser.parse_args()
     print("\nApplication arguments are: ", args)
-    main(args.year, args.quarter, args.version, args.filename, stats=args.stats)
+    main(args.year, args.quarter, args.version, args.filename)
     

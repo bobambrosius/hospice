@@ -109,29 +109,6 @@ class Volunteer:
                     result.append(person)
         return result
     
-    def show_days_and_shifts_count(self):
-        """Sum the count_of_shifts for each person"""
-
-        count = {}
-        innercount = {}
-        for service in ('verzorger', 'algemeen'):
-            for i, p in enumerate(prs for prs in self.persons
-                                  if prs.service == service):
-                length = 0
-                for shifts in p.not_on_shifts_per_weekday.values():
-                    length += len(shifts)
-                # 28 shifts in a week.
-                # Do for each person 28 -/- count of shifts
-                # so we can have like 20/28 as an indication
-                # of the persons capacity for the planning.
-                innercount[i+1] = 28 - length
-            count[service] = innercount
-            print(f'{service}: {count[service]}')
-        # Now get avarage, median and modus.
-        
-        #indication = [ round(val/28, 2) for val in count_caretaker[service].values() ]
-        #print(indication)    
-
     def show_volunteerscount(self):
         print()
         print(f'Er zijn {len(self.group_caretaker)} verzorgers beschikbaar.')
@@ -328,4 +305,3 @@ if __name__ == '__main__':
     group = Volunteer(csv_filename)
     group.show_volunteers_data()
     group.show_volunteerscount()
-    group.show_days_and_shifts_count()
