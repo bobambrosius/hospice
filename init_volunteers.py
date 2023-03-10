@@ -66,11 +66,13 @@ class Person:
 
 
 class Volunteers:
-    """A Volunteer is a Person who works without fee for the organisation hospicedereggestroom
+    """Volunteers is a collection of instances Person who work without
+    fee for a hospice organisation.
+    
     .group_generic:
-        A set of objects of type Person who's service is generic
+        A set of instances Person who's service is generic.
     .group caretaker:
-        A set of objects of type Person who's service is caretaking"""
+        A set of instances Person who's service is caretaking."""
     
     def __init__(self, sourcefilename):
 
@@ -109,13 +111,13 @@ class Volunteers:
                     result.append(person)
         return result
     
-    def show_volunteerscount(self):
+    def show_count(self):
         print()
         print(f'Er zijn {len(self.group_caretaker)} verzorgers beschikbaar.')
         print(f'Er zijn {len(self.group_generic)} algemenen beschikbaar.')
         print()
 
-    def show_volunteers_data(self):
+    def show_data(self):
         print()
         for p in self.persons:
             print(p)
@@ -303,5 +305,5 @@ class Volunteers:
 if __name__ == '__main__':
     csv_filename = 'vrijwilligers-2023-kw2.csv'
     group = Volunteers(csv_filename)
-    group.show_volunteers_data()
-    group.show_volunteerscount()
+    group.show_data()
+    group.show_count()

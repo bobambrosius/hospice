@@ -503,7 +503,7 @@ def main(year, quarter, version, input_filename):
     # Start scheduling!
     scheduler.schedule_volunteers()
     
-    volunteers.show_volunteerscount()
+    volunteers.show_count()
     
     outfilename = ('./hospice ' 
                    + str(quarter) + 'e kwartaal ' 
