@@ -13,7 +13,7 @@ class Planningelement:
         self.date = 'date_object'
         # shift: string. '1' = 7:00-11:00, '2' = 11:00-15:00, 
         #   '3' = 15:00-19:00, '4' = 19:00-23:00
-        self.shift = ''             
+        self.shift = 0
         self.weeknr = 0             # int. 1-52
         self.weekday = 0            # int. isoweekday: 1 = monday. 
         # persons: list of persons in this shift. Max two volunteers

@@ -53,10 +53,9 @@ class Person:
 
     def __repr__(self):
         return(
-            f'name: {self.name}, '
-            f'service: { self.service }, '
-            f'shifts_per_weeks: ({self.shifts_per_weeks.shifts},'
-            f'{self.shifts_per_weeks.per_weeks}), '
+            f'{self.name}, '
+            f'{self.service:10}, '
+            f'spw: {self.shifts_per_weeks.shifts,self.shifts_per_weeks.per_weeks}, '
             f'not_on_shifts_per_weekday: {self.not_on_shifts_per_weekday}, '
             f'not_in_timespan: {self.not_in_timespan}, '
             f'preferred_shifts: {self.preferred_shifts}, '

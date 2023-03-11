@@ -76,16 +76,16 @@ class Scheduler:
             self._update_persons_not_avlbl(agenda_item)
 
     def _determine_group_not_available(self, agenda_item):
-        """Exclude the persons that are marked as not available for this shift
-        from the planning capacity."""
+        """Exclude the persons that are marked as 
+        not available for this shift."""
         group_not_available = set( tuple(agenda_item.persons_not_avlbl) )
 
         # Also not available are the persons with avlblty_counter = 0
-        # EXCEPT in the weekends. 
+        # EXCEPT in the weekends, isoweeknumbers (6,7). 
         # Each volunteer must take 1 weekendshift per 4 weeks.
         # If weekend_counter is not exactly 4, 
         # then the person is not available.
-        if agenda_item.date.isoweekday() in (6,7):
+        if agenda_item.date.isoweekday() in (6,7): # Dit moet (6,7) zijn !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             dynamic_not_available = set(tuple([ p.name 
                 for p in self.all_persons 
                 if p.weekend_counter != 4 ]))
@@ -188,8 +188,10 @@ class Scheduler:
         agenda_item.persons.append(person_caretaker)
         agenda_item.persons.append(person_generic)
         
-        # The volunteer is scheduled in a weekend.
-        # Reset the weekend counter.
+        # If the volunteer is scheduled in a weekend,
+        # reset the weekend counter So that she will
+        # not be scheduled in a weekend for the next
+        # three weeks (untill the counter reaches 4).
         if agenda_item.date.isoweekday() in (6,7):
             persons = self.Volunteers.find([person_caretaker, person_generic])
             for p in persons:
@@ -275,13 +277,20 @@ class Scheduler:
         #   in "nietInPeriode" in the csv source file.
 
     def _update_avlblty_counter(self, agenda_item):
-        """Decrease avlblty_counter for the current week."""
-        
+        """Decrease avlblty_counter for the 2 persons in the agenda item.
+        The persons have 1 less availability for the rest of the week.
+        If a person has shift_per_weeks = (1,1) then she is not
+        available for the rest of the week.
+        """
         #We need the objects here, not just te names.
         persons = [ p for p in self.all_persons 
                     if p.name in agenda_item.persons ]
         # persons = 
         #   [instance of a person_generic, instance of a person_caretaker]
+        if agenda_item.weekday in (6,7) and agenda_item.shift == 4 and agenda_item.weeknr>22:
+            pass
+        if not persons:
+            pass
         for p in persons:
             # Prevent counting below zero. 
             # Use max() which return the maximum value of two.
@@ -458,9 +467,13 @@ class Scheduler:
         if unscheduled:
             unscheduled = list(unscheduled)
             print('\nDe volgende vrijwilligers zijn niet ' + 
-                'ingepland in een weekend:')
-            for person_name in unscheduled:
-                print(person_name)
+                'ingepland in het weekend:')
+            for person in self.Volunteers.find(unscheduled):
+                print(person)
+                #print(f'{person.name:20} {person.service:10} '
+                #      f'{person.shifts_per_weeks.shifts,person.shifts_per_weeks.per_weeks} ' 
+                #      f'{person.not_on_shifts_per_weekday}'
+                #      )
          
     def persons_not_scheduled(self):
         """After de schedule is finished, determine if the capacity
