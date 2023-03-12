@@ -43,7 +43,7 @@ class Person:
 
     def __init__(self):
         self.name = "" 
-        self.service = "" 
+        self.service = "" # 'algemeen' or 'verzorger'  
         self.shifts_per_weeks = () # namedtuple ShiftsPerWeeks
         self.not_on_shifts_per_weekday = dict()
         self.not_in_timespan = ()
@@ -62,16 +62,6 @@ class Person:
             f'availability_counter: {self.availability_counter}, '
             f'weekend_counter: {self.weekend_counter}'
         )
-        #return(
-        #    f'{self.name}, '
-        #    f'{self.service:10}, '
-        #    f'spw: {self.shifts_per_weeks.shifts,self.shifts_per_weeks.per_weeks}, '
-        #    f'not_on_shifts_per_weekday: {self.not_on_shifts_per_weekday}, '
-        #    f'not_in_timespan: {self.not_in_timespan}, '
-        #    f'preferred_shifts: {self.preferred_shifts}, '
-        #    f'availability_counter: {self.availability_counter}, '
-        #    f'weekend_counter: {self.weekend_counter}'
-        #)
 
 
 class Volunteers:
@@ -218,10 +208,9 @@ class Volunteers:
                         
                         # Column VoorkeurDagEnDienst
                         # preferred_shifts (prefs)
-                        # Add text in column VoorkeurStatisch.
                         prefs_dict = (
                             self.day_and_shifts_to_dict(
-                            csv_data.VoorkeurDagEnDienst + csv_data.VoorkeurStatisch,
+                            csv_data.VoorkeurDagEnDienst,
                             'VoorkeurDagEnDienst', reader.line_num)
                             )
                         
@@ -229,9 +218,13 @@ class Volunteers:
                         # shifts_per_weeks namedtuple
                         shifts_per_week = (
                             csv_data.DienstenPerAantalWeken.replace(" ","").split(","))
-                        shifts_per_weeks = ShiftsPerWeeks(
-                                int( shifts_per_week[0] ),
-                                int( shifts_per_week[1] ))
+                        shifts_per_weeks = ShiftsPerWeeks._make(
+                                [int(shifts_per_week[0]), 
+                                 int(shifts_per_week[1])]
+                                 )
+                        #shifts_per_weeks = ShiftsPerWeeks(
+                        #        int( shifts_per_week[0] ),
+                        #        int( shifts_per_week[1] ))
 
                         # availability_counter (no column)
                         availability_counter = shifts_per_weeks.shifts

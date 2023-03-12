@@ -16,12 +16,12 @@ class Planningelement:
         self.shift = 0
         self.weeknr = 0             # int. 1-52
         self.weekday = 0            # int. isoweekday: 1 = monday. 
-        # persons: list of persons in this shift. Max two volunteers
+        # persons: list of persons in this shift. Maximum is 2.
         self.persons = []           
         # persons_not_avlbl: set of persons not available for this shift.
         self.persons_not_avlbl = set()  
         # Why a set? Because several functions add a person 
-        #   to the set, and the same person must not be added twice.
+        # to the set, and the same person must not be added twice.
         
     def __repr__(self):
         return (
