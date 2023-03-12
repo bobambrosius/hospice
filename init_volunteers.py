@@ -44,9 +44,9 @@ class Person:
     def __init__(self):
         self.name = "" 
         self.service = "" 
-        self.shifts_per_weeks = "" # namedtuple ShiftsPerWeeks
+        self.shifts_per_weeks = () # namedtuple ShiftsPerWeeks
         self.not_on_shifts_per_weekday = dict()
-        self.not_in_timespan = [] # a tuple after reading data
+        self.not_in_timespan = ()
         self.preferred_shifts = dict()
         self.availability_counter = 0 
         self.weekend_counter = 4
@@ -55,13 +55,23 @@ class Person:
         return(
             f'{self.name}, '
             f'{self.service:10}, '
-            f'spw: {self.shifts_per_weeks.shifts,self.shifts_per_weeks.per_weeks}, '
+            f'shifts_per_weeks: {tuple(self.shifts_per_weeks)}, '
             f'not_on_shifts_per_weekday: {self.not_on_shifts_per_weekday}, '
             f'not_in_timespan: {self.not_in_timespan}, '
             f'preferred_shifts: {self.preferred_shifts}, '
             f'availability_counter: {self.availability_counter}, '
             f'weekend_counter: {self.weekend_counter}'
         )
+        #return(
+        #    f'{self.name}, '
+        #    f'{self.service:10}, '
+        #    f'spw: {self.shifts_per_weeks.shifts,self.shifts_per_weeks.per_weeks}, '
+        #    f'not_on_shifts_per_weekday: {self.not_on_shifts_per_weekday}, '
+        #    f'not_in_timespan: {self.not_in_timespan}, '
+        #    f'preferred_shifts: {self.preferred_shifts}, '
+        #    f'availability_counter: {self.availability_counter}, '
+        #    f'weekend_counter: {self.weekend_counter}'
+        #)
 
 
 class Volunteers:
@@ -173,7 +183,7 @@ class Volunteers:
             f.seek(0)
 
         volunteers = []
-        ShiftsPerWeeks = namedtuple('ShiftsPerWeeks', 'shifts per_weeks')
+        ShiftsPerWeeks = namedtuple('ShiftsPerWeeks', ['shifts', 'per_weeks'])
         with open(infile, newline="") as f:
             #TODO check that the DELIMITER value is not used in the cells
             reader = csv.reader(f, delimiter=const.CSV_DELIMITER)

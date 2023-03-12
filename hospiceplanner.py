@@ -466,11 +466,11 @@ class Scheduler:
             print('\nDe volgende vrijwilligers zijn niet ' + 
                 'ingepland in het weekend:')
             for person in self.Volunteers.find(unscheduled):
-                print(person)
-                #print(f'{person.name:20} {person.service:10} '
-                #      f'{person.shifts_per_weeks.shifts,person.shifts_per_weeks.per_weeks} ' 
-                #      f'{person.not_on_shifts_per_weekday}'
-                #      )
+                #print(person)
+                print(f'{person.name:20} {person.service:10} '
+                      f'{tuple(person.shifts_per_weeks)} ' 
+                      f'{person.not_on_shifts_per_weekday}'
+                      )
          
     def persons_not_scheduled(self):
         """After de schedule is finished, determine if the capacity
