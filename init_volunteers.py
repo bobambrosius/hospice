@@ -24,7 +24,7 @@ class Person:
         doesn't want to be scheduled.
     .preferred_shifts:
         Some volunteers prefer to be scheduled on a specific day and shift.
-    .avlblty_counter: 
+    .availability_counter: 
         The number of times that the person 
         is available for scheduling per one or more weeks.
         The counter is initialised with shifts_per_week.shifts.
@@ -48,7 +48,7 @@ class Person:
         self.not_on_shifts_per_weekday = dict()
         self.not_in_timespan = [] # a tuple after reading data
         self.preferred_shifts = dict()
-        self.avlblty_counter = 0 
+        self.availability_counter = 0 
         self.weekend_counter = 4
 
     def __repr__(self):
@@ -59,7 +59,7 @@ class Person:
             f'not_on_shifts_per_weekday: {self.not_on_shifts_per_weekday}, '
             f'not_in_timespan: {self.not_in_timespan}, '
             f'preferred_shifts: {self.preferred_shifts}, '
-            f'avlblty_counter: {self.avlblty_counter}, '
+            f'availability_counter: {self.availability_counter}, '
             f'weekend_counter: {self.weekend_counter}'
         )
 
@@ -223,12 +223,12 @@ class Volunteers:
                                 int( shifts_per_week[0] ),
                                 int( shifts_per_week[1] ))
 
-                        # avlblty_counter (no column)
-                        avlblty_counter = shifts_per_weeks.shifts
+                        # availability_counter (no column)
+                        availability_counter = shifts_per_weeks.shifts
                         
                         # weekend counter (no column)
                         # Initially everybody is available for weekends
-                        weekend_counter = 4
+                        weekend_counter = const.WEEKENDCOUNTER
 
                         # Column NietInPeriode
                         not_in_timespan = []
@@ -247,7 +247,7 @@ class Volunteers:
                         person.shifts_per_weeks = shifts_per_weeks
                         person.not_in_timespan = not_in_timespan
                         person.preferred_shifts = prefs_dict
-                        person.avlblty_counter = avlblty_counter
+                        person.availability_counter = availability_counter
                         person.weekend_counter = weekend_counter
                         volunteers.append(person)
                 #TODO The value error still comes 

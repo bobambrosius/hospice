@@ -66,13 +66,13 @@ class Scheduler:
             # Is the scheduler starting a new week?
             if agenda_item.weeknr != self.currentweek:
                 self.currentweek = agenda_item.weeknr
-                self._reset_avlblty_counter(self.currentweek)
+                self._reset_availability_counter(self.currentweek)
                 self._update_weekend_counter()
 
             group_not_available = (
                 self._determine_group_not_available(agenda_item))
             self._schedule_2_persons(agenda_item, group_not_available)
-            self._update_avlblty_counter(agenda_item)
+            self._update_availability_counter(agenda_item)
             self._update_persons_not_avlbl(agenda_item)
 
     def _determine_group_not_available(self, agenda_item):
@@ -80,19 +80,19 @@ class Scheduler:
         not available for this shift."""
         group_not_available = set( tuple(agenda_item.persons_not_avlbl) )
 
-        # Also not available are the persons with avlblty_counter = 0
+        # Also not available are the persons with availability_counter = 0
         # EXCEPT in the weekends, isoweeknumbers (6,7). 
-        # Each volunteer must take 1 weekendshift per 4 weeks.
-        # If weekend_counter is not exactly 4, 
+        # Each volunteer must take 1 weekendshift per WEEKENDCOUNTER weeks.
+        # If weekend_counter is not exactly WEEKENDCOUNTER, 
         # then the person is not available.
-        if agenda_item.date.isoweekday() in (6,7): # Dit moet (6,7) zijn !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        if agenda_item.date.isoweekday() in (6,7):
             dynamic_not_available = set(tuple([ p.name 
                 for p in self.all_persons 
-                if p.weekend_counter != 4 ]))
+                if p.weekend_counter != const.WEEKENDCOUNTER ]))
         else:
             dynamic_not_available = set(tuple([ p.name 
                 for p in self.all_persons 
-                if p.avlblty_counter == 0 ]))
+                if p.availability_counter == 0 ]))
 
         group_not_available.update(dynamic_not_available)
         
@@ -191,11 +191,12 @@ class Scheduler:
         # If the volunteer is scheduled in a weekend,
         # reset the weekend counter So that she will
         # not be scheduled in a weekend for the next
-        # three weeks (untill the counter reaches 4).
+        # three weeks (untill the counter reaches WEEKENDCOUNTER).
         if agenda_item.date.isoweekday() in (6,7):
             persons = self.Volunteers.find([person_caretaker, person_generic])
             for p in persons:
-                p.weekend_counter = 0
+                if  not p.name in const.PERSONS_ALWAYS_IN_WEEKEND:
+                    p.weekend_counter = 0
 
     def _update_persons_not_avlbl(self, current_agenda_item):
         """Add persons to "persons_not_avlbl" of the
@@ -228,7 +229,7 @@ class Scheduler:
                         if p.name in current_agenda_item.persons 
                         and (p.shifts_per_weeks.shifts == shiftcount
                             and p.shifts_per_weeks.per_weeks == per_weeks
-                            and p.avlblty_counter == 1)
+                            and p.availability_counter == 1)
                     ]
                 if person_selection:
                     # select all agenda items for this week
@@ -276,8 +277,8 @@ class Scheduler:
         #   Solution: register the date for the persons 
         #   in "nietInPeriode" in the csv source file.
 
-    def _update_avlblty_counter(self, agenda_item):
-        """Decrease avlblty_counter for the 2 persons in the agenda item.
+    def _update_availability_counter(self, agenda_item):
+        """Decrease availability_counter for the 2 persons in the agenda item.
         The persons have 1 less availability for the rest of the week.
         If a person has shift_per_weeks = (1,1) then she is not
         available for the rest of the week.
@@ -287,40 +288,36 @@ class Scheduler:
                     if p.name in agenda_item.persons ]
         # persons = 
         #   [instance of a person_generic, instance of a person_caretaker]
-        if agenda_item.weekday in (6,7) and agenda_item.shift == 4 and agenda_item.weeknr>22:
-            pass
-        if not persons:
-            pass
         for p in persons:
             # Prevent counting below zero. 
             # Use max() which return the maximum value of two.
-            p.avlblty_counter = max(0, p.avlblty_counter-1)
+            p.availability_counter = max(0, p.availability_counter-1)
 
     def _update_weekend_counter(self):
-        """Every 4 weeks a volunteer must participate in a pool for 
+        """Every WEEKENDCOUNTER weeks a volunteer must participate in a pool for 
         weekend scheduling. When a person has been scheduled,
         the weekend_counter is set to 0. At the start of a new 
         week the scheduler increments the weekend_counter."""
         
         for person in self.all_persons:
-            # Prevent counting above 4.
-            person.weekend_counter = min(4, person.weekend_counter + 1)
+            # Prevent counting above WEEKENDCOUNTER.
+            person.weekend_counter = min(const.WEEKENDCOUNTER, person.weekend_counter + 1)
 
-    def _reset_avlblty_counter(self, currentweek):
+    def _reset_availability_counter(self, currentweek):
         """A volunteer must not be in more shifts 
         than is indicated in his/her shifts_per_weeks preference.
-        At the start of each week, reset the avlblty_counter 
+        At the start of each week, reset the availability_counter 
         with the number of shifts that the person 
         is willing to work in a week."""
 
         for person in self.all_persons:
-            if person.avlblty_counter == 0:
+            if person.availability_counter == 0:
                 # EXCEPT when a person's preference is 1x per 2 weeks.
                 # Then the reset is done every ODD week. 
                 if not ( person.shifts_per_weeks.shifts == 1 
                         and person.shifts_per_weeks.per_weeks == 2
                         and currentweek % 2 ):
-                    person.avlblty_counter = (
+                    person.availability_counter = (
                         person.shifts_per_weeks.shifts)
 
     def _apply_static_rules(self):
@@ -352,9 +349,9 @@ class Scheduler:
             # person.not_in_timespan: 
             #   e.g. [ '22-4-2023, 29-3-2023, 2-1-2023>3-1-2023' ]
             for timespan in person.not_in_timespan:
-                found_items = self.agenda.finditem(timespan=timespan)
-                for item in found_items:
-                    item.persons_not_avlbl.add(person.name)
+                found_ag_items = self.agenda.finditem(timespan=timespan)
+                for ag_item in found_ag_items:
+                    ag_item.persons_not_avlbl.add(person.name)
 
     def write_agenda_to_csv_file(self, filename):
         """Write the agenda to the csv file <filename>."""
