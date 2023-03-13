@@ -8,8 +8,8 @@ def invert_not_on_shifts_per_weekday(all_persons):
     """Get the inverse, so on_shifts_per_weekday
     """
     prs_on_shift_per_weekday_per_service = {}
-    #weekdaysrange = (1,2,3,4,5,6,7)
-    weekdaysrange = (6,7)
+    weekdaysrange = (1,2,3,4,5,6,7)
+    #weekdaysrange = (6,7)
     shiftrange = (1,2,3,4)
     for service in SERVICES:
         persons = [ prs for prs in all_persons if prs.service == service ]

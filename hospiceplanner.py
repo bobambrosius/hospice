@@ -1,4 +1,5 @@
 import csv
+from collections import Counter
 from datetime import datetime
 from datetime import timedelta
 import locale
@@ -81,15 +82,37 @@ class Scheduler:
         group_not_available = set( tuple(agenda_item.persons_not_avlbl) )
 
         # Also not available are the persons with availability_counter = 0
-        # EXCEPT in the weekends, isoweeknumbers (6,7). 
+        # EXCEPT in the weekends (isoweeknumbers 6,7). 
         # Each volunteer must take 1 weekendshift per WEEKENDCOUNTER weeks.
-        # If weekend_counter is not exactly WEEKENDCOUNTER, 
-        # then the person is not available.
+        # The person is only available for the weekend
+        # if the weekendcounter is exactly WEEKENDCOOUNTER.
+        
+        # BUT persons who have a shifts_per_weeks of (2,1) or (3,2)
+        # are sometimes unavailable. Namely only then if 
+        # they already are in 2 shifts this week.
+        # Without this exception they could be scheduled for more 
+        # than 2 times a week, and that is too much.
+        # We only have to test if the person is this week in 2 shifts or more.
         if agenda_item.date.isoweekday() in (6,7):
+            # It's a weekend.
+            # Search persons with more than 1 shifts so far this week
+            # and save them in a list.
+            persons_scheduled_this_week = [ ag_item.persons for ag_item in self.agenda.items 
+                     if ag_item.weeknr == agenda_item.weeknr ]
+            flatlist = [ item for sublist in persons_scheduled_this_week for item in sublist ]
+            # Get a dict of all scheduled persons and count-of scheduled this week
+            cnt = Counter(flatlist)
+            # Extract the persons that are scheduled more than once.
+            # They are not available.
+            scheduled_2_times = [ key for key in cnt.keys() if cnt[key] > 1 ]
+
             dynamic_not_available = set(tuple([ p.name 
                 for p in self.all_persons 
-                if p.weekend_counter != const.WEEKENDCOUNTER ]))
+                if p.weekend_counter != const.WEEKENDCOUNTER 
+                or p.name in scheduled_2_times]))
         else:
+            # Not a weekend day. Normal rules apply.
+            # Unavailable if counter == 0.
             dynamic_not_available = set(tuple([ p.name 
                 for p in self.all_persons 
                 if p.availability_counter == 0 ]))
@@ -449,7 +472,7 @@ class Scheduler:
                     f'sh:{i.shift} {i.persons}\n')
 
     def persons_not_scheduled_in_weekend(self):
-        """After de schedule is finished, determine which persons
+        """After de scheduler is finished, determine which persons
         are not scheduled in the weekend."""
 
         scheduled_volunteers = set()

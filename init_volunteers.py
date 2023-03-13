@@ -303,6 +303,8 @@ class Volunteers:
                 raise exceptions.DayAndShiftsStringError(
                         columnname + ", regel: " 
                         + str(line_num) + ", tekst: " + operand)
+        #TODO test days_and_shifts
+        #TODO test not_in_timespan, dates
 
 if __name__ == '__main__':
     csv_filename = 'vrijwilligers-2023-kw2.csv'
