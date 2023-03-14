@@ -183,12 +183,13 @@ class Volunteers:
             for csv_data in map(Data._make, reader):
                 try:
                     # read only the persons with a particular service 
-                    if ( (csv_data.Service == 'algemeen' 
-                            or csv_data.Service == 'verzorger') 
-                            and csv_data.DienstenPerAantalWeken ):
+                    if (csv_data.DienstenPerAantalWeken ):
 
                         # Column Service
                         service = csv_data.Service.strip()
+                        self._check_sanity("service", 
+                                service, "Service",
+                                reader.line_num)
 
                         # Columns Achternaam, Tussenv, Voornaam
                         # Person name
@@ -217,14 +218,16 @@ class Volunteers:
                         # Column DienstenPerAantalWeken
                         # shifts_per_weeks namedtuple
                         shifts_per_week = (
-                            csv_data.DienstenPerAantalWeken.replace(" ","").split(","))
+                            csv_data.DienstenPerAantalWeken.replace(" ",""))
+                        self._check_sanity("shifts_per_weeks", 
+                                shifts_per_week, "DienstenPerAantalWeken",
+                                reader.line_num)
+                        shifts_per_week = (shifts_per_week.split(","))
+
+                        # Make namedtuple
                         shifts_per_weeks = ShiftsPerWeeks._make(
                                 [int(shifts_per_week[0]), 
-                                 int(shifts_per_week[1])]
-                                 )
-                        #shifts_per_weeks = ShiftsPerWeeks(
-                        #        int( shifts_per_week[0] ),
-                        #        int( shifts_per_week[1] ))
+                                 int(shifts_per_week[1])] )
 
                         # availability_counter (no column)
                         availability_counter = shifts_per_weeks.shifts
@@ -287,7 +290,12 @@ class Volunteers:
             # and then an endless repetition of
             #   '#' + (the first part, ending with '#').
             #TODO 2,2,3 should not match!
-            pattern = re.compile(r'^(((ma|di|wo|do|vr|za|zo)[:][1234]([,][1234])*)[#])*$')
+            pattern = re.compile(r'^(((ma|di|wo|do|vr|za|zo)[:][1-4]([,][1-4])*)[#])*$')
+            return re.match(pattern, operand)
+
+        def check_shifts_per_weeks(operand):
+            # shifts_per_weeks must be like 1,2 or 3,2 or ...
+            pattern = re.compile(r'^(1,1|1,2|3,2|2,1|2,3)$')
             return re.match(pattern, operand)
 
         # End of helper functions
@@ -303,11 +311,24 @@ class Volunteers:
                 raise exceptions.DayAndShiftsStringError(
                         columnname + ", regel: " 
                         + str(line_num) + ", tekst: " + operand)
-        #TODO test days_and_shifts
+        
+        if test == "shifts_per_weeks":
+            if not check_shifts_per_weeks(operand):
+                raise exceptions.ShiftsPerWeeksError(
+                    columnname + ", regel: "
+                    + str(line_num) + ", tekst: " + operand)
+        
+        if test == "service":
+            if (not operand) or operand not in ('verzorger, algemeen'):
+                raise exceptions.ServicenameError(
+                    columnname + ", regel: "
+                    + str(line_num) + ", tekst: " + operand)
+
+
         #TODO test not_in_timespan, dates
 
 if __name__ == '__main__':
     csv_filename = 'vrijwilligers-2023-kw2.csv'
     group = Volunteers(csv_filename)
-    group.show_data()
+    #group.show_data()
     group.show_count()

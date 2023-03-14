@@ -9,12 +9,19 @@ class DuplicatePersonnameError(Exception):
         self.msg = msg
         super().__init__(self.msg + ': "' + name + '"')
 
+class ServicenameError(Exception):
+    """Exception raised if service has wrong name.
+    """
+
+class ShiftsPerWeeksError(Exception):
+    """Exception raised if shifts_per_weeks has wrong format.
+    """
 
 class DayAndShiftsStringError(Exception):
     """Exception raised if the day_and_shifts_string has the wrong format.
 
     Attributes:
-        inputstring -- day_end_shifts_string with wrong format.
+        inputstring -- day_and_shifts_string with wrong format.
     """
     def __init__(self, inputstring, msg=(
             f'formaat niet correct in kolom ')
