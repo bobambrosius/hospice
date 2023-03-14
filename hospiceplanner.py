@@ -135,6 +135,7 @@ class Scheduler:
         """Update agenda_item.persons with 2 person names.
         One of type caretaker and one of type generalist.
         """
+
         def helper_pref_person(service, diff_group):
             """If a person has a preference for a weekday-and-shift,
             that person is here chosen before others.
@@ -165,6 +166,56 @@ class Scheduler:
             else:
                 return None
 
+        def remove_persons_with_future_prefs(service, diff_group, agenda_item):
+            """Remove from diff_group the persons that have a preference for
+            shifts in the future. If we plan them too soon, they are no
+            longer available for shifts that have their preference.
+            """
+            current_weekday = agenda_item.weekday
+            current_shift = agenda_item.shift
+            
+            # Make a list of persons that heve a preferred shift
+            tmp_group = [ (p.name, p.preferred_shifts) 
+                      for p in self.all_persons 
+                      if p.service == service
+                      and p.preferred_shifts 
+                    ]
+            
+            result = []
+            for prs, pref in tmp_group:
+                # if the current workdsy is in the pref workdays,
+                # and the current shift in that wotkday,
+                # than do not remove the person from the
+                # available persons, because it IS the preferred
+                # day and shift matching the current day and shift.
+                if not (current_weekday in pref.keys() 
+                            and current_shift in pref[current_weekday]):
+                    for pref_weekday in pref.keys():
+                        # If the pref_weekday is in the future,
+                        # Add this person. She wil be discarded for 
+                        # this agenda item.
+                        if pref_weekday > current_weekday:
+                            result.append(prs)
+                            break
+                        else:
+                            # Else check if there are future shifts
+                            # on the current workday.
+                            for pref_shift in pref[pref_weekday]:
+                                # AND if the pref_shift is later on the day
+                                if pref_shift > current_shift:
+                                    # Then add the person to the list of persons
+                                    # to be discarded for the current shift.
+                                    result.append(prs)
+                                    break
+
+            for person in result:
+                # Do not remove any person if there is only one in diff_group
+                # for then we would have no one left for this shift.
+                # In that case no preference is honoured.
+                if len(diff_group) > 1:
+                    diff_group.discard(person)
+
+
         # Do not schedule on a holyday
         if agenda_item.date in self.holydays:
             person_generic = "" 
@@ -172,11 +223,12 @@ class Scheduler:
         else:
             # The two volunteers for this shift 
             # are selected from two different pools
-            diff_group_generic = tuple(
-                self.generalist_names - group_not_available)
-            diff_group_caretaker = tuple(
-                self.caretaker_names - group_not_available) 
+            diff_group_generic = self.generalist_names - group_not_available
+            diff_group_caretaker = self.caretaker_names - group_not_available
                 
+            remove_persons_with_future_prefs('algemeen', diff_group_generic, agenda_item)
+            remove_persons_with_future_prefs('verzorger', diff_group_caretaker, agenda_item)
+
             # Select a random sample of 1 person 
             # as a list of 1 item from both sets.
             # Note: function 'random' doesn't operate on a set,
@@ -186,6 +238,7 @@ class Scheduler:
 
             # Choose generalist
             if diff_group_generic:
+                diff_group_generic = tuple(diff_group_generic)
                 pref_person =  helper_pref_person(
                     'algemeen', diff_group_generic)
                 if pref_person:
@@ -198,6 +251,7 @@ class Scheduler:
                 
             # Choose caretaker
             if diff_group_caretaker:
+                diff_group_caretaker = tuple(diff_group_caretaker)
                 pref_person =  helper_pref_person(
                     'verzorger', diff_group_caretaker)
                 if pref_person:
@@ -471,6 +525,18 @@ class Scheduler:
                     f'wd:{i.weekday} '
                     f'sh:{i.shift} {i.persons}\n')
 
+    def not_scheduled_shifts(self):
+        caretakers = [ ag_item for ag_item in self.agenda.items
+                if not ag_item.persons[0]
+                and ag_item.date not in self.holydays ]
+        generalists = [ ag_item for ag_item in self.agenda.items
+                if not ag_item.persons[1]
+                and ag_item.date not in self.holydays ]
+        cc = len(caretakers)
+        gc = len(generalists)
+        total = cc + gc
+        print(f'Aantal ongepland diensten, verzorgers: {cc}, algemenen: {gc}. Totaal: {total}') 
+
     def persons_not_scheduled_in_weekend(self):
         """After de scheduler is finished, determine which persons
         are not scheduled in the weekend."""
@@ -527,15 +593,19 @@ def file_exists(filename, extension):
         return False
 
 
-def main(year, quarter, version, input_filename):
+def main(args):
+    year = args.year
+    quarter = args.quarter
+    version = args.version
+    input_filename = args.filename
     agenda = init_agenda.Agenda(year=year, quarter=quarter)
     volunteers = init_volunteers.Volunteers(input_filename)
     scheduler = Scheduler(year, quarter, version, agenda, volunteers) 
     
     # Start scheduling!
     scheduler.schedule_volunteers()
-    
-    volunteers.show_count()
+    if args.verbose:
+        volunteers.show_count()
     
     outfilename = ('./hospice ' 
                    + str(quarter) + 'e kwartaal ' 
@@ -546,9 +616,11 @@ def main(year, quarter, version, input_filename):
     scheduler.write_agenda_to_txt_file(outfilename + '.txt')
     scheduler.write_agenda_to_csv_file(outfilename + '.csv')
     
-    scheduler.persons_not_scheduled()
-    scheduler.persons_not_scheduled_in_weekend()
-
+    if args.verbose:
+        scheduler.persons_not_scheduled()
+        #scheduler.persons_not_scheduled_in_weekend()
+        scheduler.not_scheduled_shifts()
+    
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -567,7 +639,13 @@ if __name__ == '__main__':
         help='welke versie', type=int)
     parser.add_argument("filename", 
         help='csv bestand met vrijwillergersgegevens')
+    parser.add_argument('-v', '--verbose', 
+        help='More information about results of scheduling', action='store_true')
     args = parser.parse_args()
-    print("\nApplication arguments are: ", args)
-    main(args.year, args.quarter, args.version, args.filename)
+    
+    if args.verbose:
+        print("\nApplication arguments are: ", args)
+
+    main(args)
+    
     
