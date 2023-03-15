@@ -1,13 +1,11 @@
+import sys
+
+# Don't print Traceback
+sys.tracebacklimit = 0
+
 class DuplicatePersonnameError(Exception):
     """Exception raised if the sourcefile contains duplicate names.
-
-    Attributes:
-        name -- personname that is a duplicate
     """
-    def __init__(self, name, msg='Naam komt dubbel voor'):
-        self.name = name
-        self.msg = msg
-        super().__init__(self.msg + ': "' + name + '"')
 
 class ServicenameError(Exception):
     """Exception raised if service has wrong name.
@@ -50,12 +48,5 @@ class InvalidColumnHeaderError(ValueError):
 
 class InvalidSourceFile(Exception):
     """Exception raised if the sourcefile can't be read.
-
-    Attributes:
-        reason -- The reason why the sourcefile is invalid
     """
-    def __init__(self, reason, msg='Bronbestand is niet leesbaar. '):
-        self.reason = reason
-        self.msg = msg
-        super().__init__(self.msg + reason)
 
