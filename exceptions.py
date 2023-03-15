@@ -3,6 +3,10 @@ import sys
 # Don't print Traceback
 sys.tracebacklimit = 0
 
+class DateFormatError(Exception):
+    """Exception raised if the format of a date doesn't conform to const.py.
+    """
+
 class DuplicatePersonnameError(Exception):
     """Exception raised if the sourcefile contains duplicate names.
     """
@@ -46,7 +50,7 @@ class InvalidColumnHeaderError(ValueError):
         super().__init__(self.msg + ': "' + columnheader + '"')
 
 
-class InvalidSourceFile(Exception):
+class InvalidSourceFileError(Exception):
     """Exception raised if the sourcefile can't be read.
     """
 

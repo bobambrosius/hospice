@@ -1,4 +1,6 @@
 from collections import namedtuple
+from datetime import timedelta
+from datetime import datetime
 import re
 import traceback
 import csv
@@ -76,10 +78,10 @@ class Volunteers:
     def __init__(self, sourcefilename):
 
         self.sourcefilename = sourcefilename
-        print(f'Bestand lezen: "{self.sourcefilename}"...')
+        print(f'\nBestand lezen: "{self.sourcefilename}"...\n')
 
         # self.persons is a tuple with instances of class 'Person'
-        self.persons = self._get_volunteers(self.sourcefilename)
+        self.persons = self._read_volunteersfile(self.sourcefilename)
         self._check_sanity("duplicate_names")
 
         # Get all 'generic' workers and all 'caretaker' workers.
@@ -154,7 +156,7 @@ class Volunteers:
         else:
             return {}
 
-    def _get_volunteers(self, infile):
+    def _read_volunteersfile(self, infile):
         """read a prepared csv file <infile>, which is record-delimited with
         DELIMITER, into a dynamic namedtuple.
         The attributes are extracted from the column names.
@@ -166,10 +168,10 @@ class Volunteers:
         with open(infile, newline="") as f:
             dialect = csv.Sniffer().sniff(f.read(40))
             if dialect.delimiter != const.CSV_DELIMITER:
-                raise exceptions.InvalidSourceFile('Het veld-scheidingteken is niet ";".')
+                raise exceptions.InvalidSourceFileError('Het veld-scheidingteken is niet ";".')
             f.seek(0)
             if not csv.Sniffer().has_header(f.read(40)):
-                raise exceptions.InvalidSourceFile('Kolomkoppen ontbreken.')
+                raise exceptions.InvalidSourceFileError('Kolomkoppen ontbreken.')
             f.seek(0)
 
         volunteers = []
@@ -223,7 +225,6 @@ class Volunteers:
                                 shifts_per_week, "DienstenPerAantalWeken",
                                 reader.line_num)
                         shifts_per_week = (shifts_per_week.split(","))
-
                         # Make namedtuple
                         shifts_per_weeks = ShiftsPerWeeks._make(
                                 [int(shifts_per_week[0]), 
@@ -237,12 +238,12 @@ class Volunteers:
                         weekend_counter = const.WEEKENDCOUNTER
 
                         # Column NietInPeriode
-                        not_in_timespan = []
-                        if csv_data.NietInPeriode:
-                            for period in csv_data.NietInPeriode.replace(" ","").split(","):
-                                not_in_timespan.append(period)
-                            # Make the data immutable
-                            not_in_timespan = tuple(not_in_timespan)
+                        not_in_timespan = tuple( 
+                            period for period in
+                            csv_data.NietInPeriode.replace(" ","").split(",") 
+                        )
+                        self._check_sanity('dates_string', 
+                            not_in_timespan, 'NietInPeriode', reader.line_num)
 
                         # Now we have all the data to instantiate a Person
                         person = Person()
@@ -324,6 +325,25 @@ class Volunteers:
                     columnname + ", regel: "
                     + str(line_num) + ", tekst: " + operand)
 
+        if test == "dates_string" and operand == True:
+            #TODO gekopieerd uit init_agenda!
+            #TODO opeenvolgende datum van periode nog testen
+            for item in operand:
+                dates = item.split('>') 
+                try:
+                    if len(dates) >1:
+                        _ = datetime.strptime(dates[0], 
+                            const.DATEFORMAT).date()
+                        _ = datetime.strptime(dates[1], 
+                            const.DATEFORMAT).date()
+                    else:
+                        _ = datetime.strptime(dates[0], 
+                            const.DATEFORMAT).date()
+                except ValueError: 
+                    raise exceptions.DateFormatError(
+                        'kolom: ' + columnname + ", regel: "
+                        + str(line_num) + ", tekst: " + item)
+                    
 
         #TODO test not_in_timespan, dates
 

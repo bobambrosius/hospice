@@ -83,7 +83,6 @@ class Agenda:
         #TODO Als een tijdspanne twee datums heeft 
         #   dan moet de tweede volgen op de eerste, of hetzelfde zijn.
         if timespan:
-            const.DATEFORMAT = '%d-%m-%Y'
             dates = timespan.split('>') 
             if len(dates) >1:
                 startdate = datetime.strptime(dates[0], 

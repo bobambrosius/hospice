@@ -7,9 +7,9 @@ WEEKDAY_NAME_LOOKUP = { 1:'ma', 2:'di', 3:'wo', 4:'do', 5:'vr', 6:'za', 7:'zo' }
 # A person is scheduled in a weekend every WEEKENDCOUNTER weeks
 WEEKENDCOUNTER = 2
 
-PERSONS_ALWAYS_IN_WEEKEND = ['Marijke Tibben', 'Janny Seppenwoolde']
+PERSONS_ALWAYS_IN_WEEKEND = ('Marijke Tibben', 'Janny Seppenwoolde')
 
-DATEFORMAT = '%-d-%-m-%y'
+DATEFORMAT = '%d-%m-%Y'
 
 # Needed when reporting shifts
 SHIFTNUMBER_LABEL_LOOKUP = {
