@@ -81,8 +81,6 @@ class Agenda:
         # Return all agenda items that are in a timespan.
         # Timespan has either two dates or one date
         #TODO Test this function again!!!
-        if timespan == ('',):
-            pass
         if timespan:
             dates = timespan.split('>') 
             if len(dates) > 1:

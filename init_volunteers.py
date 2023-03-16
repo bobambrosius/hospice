@@ -188,6 +188,8 @@ class Volunteers:
                     if (csv_data.DienstenPerAantalWeken ):
 
                         # Column Service
+                        #TODO Iemand kan zowel verzorger als algemeen zijn!!
+                        # Moet dus een list worden i.p.v. string, met test op 'in' i.p.v. ==
                         service = csv_data.Service.strip()
                         self._check_sanity("service", 
                                 service, "Service",
@@ -325,12 +327,8 @@ class Volunteers:
                     columnname + ", regel: "
                     + str(line_num) + ", tekst: " + operand)
 
-        if test == "dates_string":
-            if line_num == 27:
-                pass
         if test == "dates_string" and operand == True:
             #TODO gekopieerd uit init_agenda!
-            #TODO opeenvolgende datum van periode nog testen
             for item in operand:
                 dates = item.split('>') 
                 try:
