@@ -312,23 +312,28 @@ class Volunteers:
         if test == 'day_and_shifts_string':
             if not check_day_and_shifts_string(operand):
                 raise exceptions.DayAndShiftsStringError(
-                        columnname + ", regel: " 
-                        + str(line_num) + ", tekst: " + operand)
+                    f'kolom: {columnname!r}, '
+                    f'regel: {line_num}, '
+                    f'tekst: {operand!r})')
         
         if test == "shifts_per_weeks":
             if not check_shifts_per_weeks(operand):
                 raise exceptions.ShiftsPerWeeksError(
-                    columnname + ", regel: "
-                    + str(line_num) + ", tekst: " + operand)
+                    f'kolom: {columnname!r}, '
+                    f'regel: {line_num}, '
+                    f'tekst: {operand!r})')
         
         if test == "service":
             if (not operand) or operand not in ('verzorger, algemeen'):
                 raise exceptions.ServicenameError(
-                    columnname + ", regel: "
-                    + str(line_num) + ", tekst: " + operand)
+                    f'kolom: {columnname!r}, '
+                    f'regel: {line_num}, '
+                    f'tekst: {operand!r})')
 
-        if test == "dates_string" and operand == True:
+        if test == "dates_string" and all(operand) == True:
             #TODO gekopieerd uit init_agenda!
+            #TODO hat jaar kan ook onjuist zijn, maar denk eraan
+            # dat de kwartalen over het jaar heen gaan.
             for item in operand:
                 dates = item.split('>') 
                 try:
@@ -339,15 +344,20 @@ class Volunteers:
                             const.DATEFORMAT).date()
                         if enddate < startdate:
                             raise exceptions.DateTimespanError(
-                                'kolom: ' + columnname + ", regel: "
-                                + str(line_num) + ", tekst: " + item)
+                                f'kolom: {columnname!r}, '
+                                f'regel: {line_num}, '
+                                f'tekst: {item!r})')
                     else:
+                        # The variable is not important, just the execution
+                        # of the function.
                         _ = datetime.strptime(dates[0], 
                             const.DATEFORMAT).date()
                 except ValueError:
+                    line_num = str(line_num)
                     raise exceptions.DateFormatError(
-                        'kolom: ' + columnname + ", regel: "
-                        + str(line_num) + ", tekst: " + item)
+                        f'kolom: {columnname!r}, '
+                        f'regel: {line_num}, '
+                        f'tekst: {item!r})')
 
 
 if __name__ == '__main__':
