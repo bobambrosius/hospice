@@ -78,7 +78,8 @@ class Scheduler:
 
     def _determine_group_not_available(self, agenda_item):
         """Exclude the persons that are marked as 
-        not available for this shift."""
+        not available for this shift.
+        """
         group_not_available = set( tuple(agenda_item.persons_not_avlbl) )
 
         # Also not available are the persons with availability_counter = 0
@@ -281,7 +282,8 @@ class Scheduler:
         for two days in a row or for more than one shift on one day.
         Note: This person is also registered in the CURRENT agenda shift
         in 'not_available', but that is no longer of interest
-        because the shift is already sheduled."""
+        because the shift is already sheduled.
+        """
 
         def all_week_not_available(shifts_per_weeks_argument):
             """HELPER function for _update_persons_not_avlbl().
@@ -292,7 +294,8 @@ class Scheduler:
             The same goes for 2 times in 3 weeks 
             and for 1 shift in two weeks.
             Applicable only in certain shifts_per_weeks combinations:
-            (3,2) (2,3) (1,2), so more than 1 week."""
+            (3,2) (2,3) (1,2), so more than 1 week.
+            """
 
             # Get the instances of class Person for the 2 volunteers 
             # in this shift only if the conditions (see the code) are met.
@@ -374,8 +377,8 @@ class Scheduler:
         """Every WEEKENDCOUNTER weeks a volunteer must participate in a pool for 
         weekend scheduling. When a person has been scheduled,
         the weekend_counter is set to 0. At the start of a new 
-        week the scheduler increments the weekend_counter."""
-        
+        week the scheduler increments the weekend_counter.
+        """
         for person in self.all_persons:
             # Prevent counting above WEEKENDCOUNTER.
             person.weekend_counter = min(const.WEEKENDCOUNTER, person.weekend_counter + 1)
@@ -385,8 +388,8 @@ class Scheduler:
         than is indicated in his/her shifts_per_weeks preference.
         At the start of each week, reset the availability_counter 
         with the number of shifts that the person 
-        is willing to work in a week."""
-
+        is willing to work in a week.
+        """
         for person in self.all_persons:
             if person.availability_counter == 0:
                 # EXCEPT when a person's preference is 1x per 2 weeks.
@@ -402,8 +405,8 @@ class Scheduler:
         with the preferences of each volunteer i.e.
         persons who don't want to be in a certain shift,
         or who don't want to work on a certain day of the week,
-        or who don't want to work on specific dates."""
-
+        or who don't want to work on specific dates.
+        """
         for person in self.all_persons:
             # person is not working on a specific day of week
             # on a specific shift
@@ -431,8 +434,8 @@ class Scheduler:
                     ag_item.persons_not_avlbl.add(person.name)
 
     def write_agenda_to_csv_file(self, filename):
-        """Write the agenda to the csv file <filename>."""
-        
+        """Write the agenda to the csv file <filename>.
+        """
         dateformat = "%-d %b" # day - short monthname
         
         with open(filename, 'w') as f:
@@ -495,8 +498,8 @@ class Scheduler:
             print(f'Bestand opgeslagen: {filename}')
 
     def write_agenda_to_txt_file(self, filename):
-        """Write the agenda to the txt file <filename>"""
-
+        """Write the agenda to the txt file <filename>
+        """
         with open(filename, 'w') as f:
             weekday_nr = 0
             date = ''
@@ -539,8 +542,8 @@ class Scheduler:
 
     def persons_not_scheduled_in_weekend(self):
         """After de scheduler is finished, determine which persons
-        are not scheduled in the weekend."""
-
+        are not scheduled in the weekend.
+        """
         scheduled_volunteers = set()
         for ag_item in self.agenda.items:
             if ag_item.weekday in (6,7):
@@ -563,8 +566,8 @@ class Scheduler:
          
     def persons_not_scheduled(self):
         """After de schedule is finished, determine if the capacity
-        of the full group of volunteers has been used."""
-
+        of the full group of volunteers has been used.
+        """
         scheduled_volunteers = set()
         for ag_item in self.agenda.items:
             for person_name in ag_item.persons:
@@ -627,9 +630,9 @@ if __name__ == '__main__':
             description='Agenda planner voor hospice, Rijssen',
             formatter_class=argparse.RawDescriptionHelpFormatter,
             epilog=textwrap.dedent(
-            '''Voorbeeld:
+            """Voorbeeld:
                 python hospiceplanner.py 2023 4 1 vrijwilligers-2023-kw1.csv
-            ''')
+            """)
         )
     parser.add_argument('year', 
         help='voor wel jaar de planning gemaakt moet worden', type=int)

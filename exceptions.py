@@ -1,7 +1,7 @@
 import sys
 
 # Don't print Traceback
-sys.tracebacklimit = 0
+#sys.tracebacklimit = 0
 
 class DateTimespanError(Exception):
     """Exception raised if in two dates, the second date 

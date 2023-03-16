@@ -2,8 +2,7 @@ from collections import namedtuple
 from datetime import timedelta
 from datetime import datetime
 import re
-import traceback
-import csv
+from openpyxl import load_workbook
 import const
 import exceptions
 
@@ -73,8 +72,8 @@ class Volunteers:
     .generalist_names:
         A set of person names who's service is generic.
     .caretaker_names:
-        A set of person names who's service is caretaking."""
-    
+        A set of person names who's service is caretaking.
+    """
     def __init__(self, sourcefilename):
 
         self.sourcefilename = sourcefilename
@@ -104,7 +103,9 @@ class Volunteers:
             ]))
 
     def find(self, namelist):
-        """Return all found persons in the Volunteers collection in namelist."""
+        """Return all found persons 
+        in the Volunteers collection in namelist.
+        """
         result = []
         for name in namelist:
             for person in self.persons:
@@ -123,12 +124,14 @@ class Volunteers:
         for p in self.persons:
             print(p)
 
-    def day_and_shifts_to_dict(self, day_and_shifts_string, columnname, line_num):
-        """The day_and_shifts_string is for example 'ma:1, 2,3,4#  wo:3,4 # zo:4.'
+    def day_and_shifts_to_dict(self, 
+            day_and_shifts_string, columnname, line_num):
+        """The day_and_shifts_string is 
+        for example 'ma:1, 2,3,4#  wo:3,4 # zo:4.'
         The function returns the dict: { 1: (1,2,3,4), 3: (3,4), 7: (4) }
         The weekddays are translated to isoweekday numbers,
-        and the shifts are in a tuple."""
-
+        and the shifts are in a tuple.
+        """
         if day_and_shifts_string:
             spaceless_string = day_and_shifts_string.replace(" ","")
             
@@ -157,119 +160,119 @@ class Volunteers:
             return {}
 
     def _read_volunteersfile(self, infile):
-        """read a prepared csv file <infile>, which is record-delimited with
-        DELIMITER, into a dynamic namedtuple.
+        """read a prepared xls file <infile>.
         The attributes are extracted from the column names.
-        Read the values from the csv file.
+        Read the values from the xls file.
         Assign the values to the an instance of class 'Person'.
-        Return a list of the instances 'Person'."""
-        
-        # Peform some basic tests to validate the sourcefile.
-        with open(infile, newline="") as f:
-            dialect = csv.Sniffer().sniff(f.read(40))
-            if dialect.delimiter != const.CSV_DELIMITER:
-                raise exceptions.InvalidSourceFileError('Het veld-scheidingteken is niet ";".')
-            f.seek(0)
-            if not csv.Sniffer().has_header(f.read(40)):
-                raise exceptions.InvalidSourceFileError('Kolomkoppen ontbreken.')
-            f.seek(0)
-
+        Return a list of the instances 'Person'.
+        """
         volunteers = []
         ShiftsPerWeeks = namedtuple('ShiftsPerWeeks', ['shifts', 'per_weeks'])
-        with open(infile, newline="") as f:
-            #TODO check that the DELIMITER value is not used in the cells
-            reader = csv.reader(f, delimiter=const.CSV_DELIMITER)
-            # get names from column headers
-            #TODO kolomnamen kunnen geen spaties of '-' teken bevatten
-            Data = namedtuple("Data", next(reader))
-            for csv_data in map(Data._make, reader):
-                try:
-                    # read only the persons with a particular service 
-                    if (csv_data.DienstenPerAantalWeken ):
+        
+        wb = load_workbook(filename=infile, data_only=True)
+        ws = wb.active
+        reader = ws.iter_rows(min_col=10, values_only=True)
 
-                        # Column Service
-                        #TODO Iemand kan zowel verzorger als algemeen zijn!!
-                        # Moet dus een list worden i.p.v. string, met test op 'in' i.p.v. ==
-                        service = csv_data.Service.strip()
-                        self._check_sanity("service", 
-                                service, "Service",
-                                reader.line_num)
+        # get names from column headers
+        #TODO kolomnamen kunnen geen spaties of '-' teken bevatten?
+        #TODO controle of wel wel headers zijn
+        Data = namedtuple("Data", next(reader))
+        # start enumerating with line number 2
+        for line_num, xls_data in enumerate(map(Data._make, reader), 2):
+            try:
+                # read only the Active persons
+                if (xls_data.Actief ):
 
-                        # Columns Achternaam, Tussenv, Voornaam
-                        # Person name
-                        tussenvoegsel = ""
-                        if csv_data.Tussenv.strip(): 
-                            tussenvoegsel = " " + csv_data.Tussenv.strip()
-                        name = (csv_data.Voornaam.strip()
-                            + tussenvoegsel + " " 
-                            + csv_data.Achternaam.strip())
+                    # Column Service
+                    #TODO Iemand kan zowel verzorger als algemeen zijn!!
+                    # Moet dus een list worden i.p.v. string, 
+                    # met test op 'in' i.p.v. ==
+                    service = xls_data.Service or ""
+                    service = service.strip()
+                    self._check_sanity("service", service, "Service", line_num)
 
-                        # Column NietOpDagEnDienst
-                        not_on_shifts_per_weekday = (
-                            self.day_and_shifts_to_dict(
-                            csv_data.NietOpDagEnDienst,
-                            'NietOpDagEnDienst', reader.line_num) 
-                            )
-                        
-                        # Column VoorkeurDagEnDienst
-                        # preferred_shifts (prefs)
-                        prefs_dict = (
-                            self.day_and_shifts_to_dict(
-                            csv_data.VoorkeurDagEnDienst,
-                            'VoorkeurDagEnDienst', reader.line_num)
-                            )
-                        
-                        # Column DienstenPerAantalWeken
-                        # shifts_per_weeks namedtuple
-                        shifts_per_week = (
-                            csv_data.DienstenPerAantalWeken.replace(" ",""))
-                        self._check_sanity("shifts_per_weeks", 
-                                shifts_per_week, "DienstenPerAantalWeken",
-                                reader.line_num)
-                        shifts_per_week = (shifts_per_week.split(","))
-                        # Make namedtuple
-                        shifts_per_weeks = ShiftsPerWeeks._make(
-                                [int(shifts_per_week[0]), 
-                                 int(shifts_per_week[1])] )
+                    # Columns Achternaam, Tussenv, Voornaam
+                    # Person name
+                    insert = xls_data.Tussenv or ""
+                    if insert.strip():
+                        pass
+                    if insert.strip(): insert = " " + insert
+                    givenname = xls_data.Voornaam or ""
+                    surname = xls_data.Achternaam or "" 
+                    name = (givenname.strip() + insert + " " + surname.strip())
 
-                        # availability_counter (no column)
-                        availability_counter = shifts_per_weeks.shifts
-                        
-                        # weekend counter (no column)
-                        # Initially everybody is available for weekends
-                        weekend_counter = const.WEEKENDCOUNTER
-
-                        # Column NietInPeriode
-                        not_in_timespan = tuple( 
-                            period for period in
-                            csv_data.NietInPeriode.replace(" ","").split(",") 
+                    # Column NietOpDagEnDienst
+                    not_on_shifts_per_weekday = xls_data.NietOpDagEnDienst or ""
+                    not_on_shifts_per_weekday = (
+                        self.day_and_shifts_to_dict(not_on_shifts_per_weekday,
+                        'NietOpDagEnDienst', line_num) 
                         )
-                        self._check_sanity('dates_string', 
-                            not_in_timespan, 'NietInPeriode', reader.line_num)
+                    
+                    # Column VoorkeurDagEnDienst
+                    # preferred_shifts (prefs)
+                    preferred_shifts = xls_data.VoorkeurDagEnDienst or ""
+                    prefs_dict = (
+                        self.day_and_shifts_to_dict(preferred_shifts,
+                        'VoorkeurDagEnDienst', line_num)
+                        )
+                    
+                    # Column DienstenPerAantalWeken
+                    # shifts_per_weeks namedtuple
+                    # xls OpenOffice is confusing. Even though the column
+                    # is formatted as text, the value 1,1 is read as 
+                    # a float! After entering the value *again*
+                    # it is read as a string.
+                    shifts_per_week = xls_data.DienstenPerAantalWeken or ""
+                    #shifts_per_week = str(shifts_per_week)
+                    shifts_per_week = shifts_per_week.replace(" ","")
+                    self._check_sanity("shifts_per_weeks", 
+                            shifts_per_week, "DienstenPerAantalWeken",
+                            line_num)
+                    shifts_per_week = (shifts_per_week.split(","))
+                    # Make namedtuple
+                    shifts_per_weeks = ShiftsPerWeeks._make(
+                            [int(shifts_per_week[0]), 
+                             int(shifts_per_week[1])] )
 
-                        # Now we have all the data to instantiate a Person
-                        person = Person()
-                        person.name = name
-                        person.service = service
-                        person.not_on_shifts_per_weekday = (
-                            not_on_shifts_per_weekday)
-                        person.shifts_per_weeks = shifts_per_weeks
-                        person.not_in_timespan = not_in_timespan
-                        person.preferred_shifts = prefs_dict
-                        person.availability_counter = availability_counter
-                        person.weekend_counter = weekend_counter
-                        volunteers.append(person)
-                #TODO The value error still comes 
-                # from namedtuple("data", next(reader))!
-                # reraise??
-                except exceptions.InvalidColumnHeaderError:
-                    exit()
+                    # availability_counter (no column)
+                    availability_counter = shifts_per_weeks.shifts
+                    
+                    # weekend counter (no column)
+                    # Initially everybody is available for weekends
+                    weekend_counter = const.WEEKENDCOUNTER
+
+                    # Column NietInPeriode
+                    not_in_timespan_value = xls_data.NietInPeriode or ""
+                    not_in_timespan = tuple( 
+                        period for period in
+                        not_in_timespan_value.replace(" ","").split(",") 
+                    )
+                    self._check_sanity('dates_string', 
+                        not_in_timespan, 'NietInPeriode', line_num)
+
+                    # Now we have all the data to instantiate a Person
+                    person = Person()
+                    person.name = name
+                    person.service = service
+                    person.not_on_shifts_per_weekday = (
+                        not_on_shifts_per_weekday)
+                    person.shifts_per_weeks = shifts_per_weeks
+                    person.not_in_timespan = not_in_timespan
+                    person.preferred_shifts = prefs_dict
+                    person.availability_counter = availability_counter
+                    person.weekend_counter = weekend_counter
+                    volunteers.append(person)
+            #TODO The value error still comes 
+            # from namedtuple("data", next(reader))!
+            # reraise??
+            except exceptions.InvalidColumnHeaderError:
+                exit()
         return tuple(volunteers)
 
     def _check_sanity(self, test, operand = None, 
                       columnname = None, line_num = None):
-        """Check the validity of the input data."""
-        
+        """Check the validity of the input data from the sourcefile.
+        """
         #------------------------------------------------------------
         # Start of helper functions
         def find_duplicate_personnames(nameslist, name):
@@ -283,7 +286,7 @@ class Volunteers:
             # There are no spaces in the operand.
             # operand example: di:1,2,3#wo:1,2,3#do:1,2,3#vr:1,2,3#
             
-            # The operand does not end with a '#'.
+            # Check if the operand ends with a '#'.
             if operand[-1] != "#":
                 return None
 
@@ -361,7 +364,7 @@ class Volunteers:
 
 
 if __name__ == '__main__':
-    csv_filename = 'vrijwilligers-2023-kw2.csv'
-    group = Volunteers(csv_filename)
+    xls_filename = 'vrijwilligers-2023-kw2.xlsx'
+    group = Volunteers(xls_filename)
     #group.show_data()
     group.show_count()
