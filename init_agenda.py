@@ -78,13 +78,14 @@ class Agenda:
                 if self.items[i].weekday == weekday:
                     yield self.items[i]
 
-        # Return all agenda items that are in a timespan
-        # timespan has either two dates or one date
-        #TODO Als een tijdspanne twee datums heeft 
-        #   dan moet de tweede volgen op de eerste, of hetzelfde zijn.
+        # Return all agenda items that are in a timespan.
+        # Timespan has either two dates or one date
+        #TODO Test this function again!!!
+        if timespan == ('',):
+            pass
         if timespan:
             dates = timespan.split('>') 
-            if len(dates) >1:
+            if len(dates) > 1:
                 startdate = datetime.strptime(dates[0], 
                             const.DATEFORMAT).date()
                 enddate = datetime.strptime(dates[1], 

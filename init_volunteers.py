@@ -325,27 +325,32 @@ class Volunteers:
                     columnname + ", regel: "
                     + str(line_num) + ", tekst: " + operand)
 
+        if test == "dates_string":
+            if line_num == 27:
+                pass
         if test == "dates_string" and operand == True:
             #TODO gekopieerd uit init_agenda!
             #TODO opeenvolgende datum van periode nog testen
             for item in operand:
                 dates = item.split('>') 
                 try:
-                    if len(dates) >1:
-                        _ = datetime.strptime(dates[0], 
+                    if len(dates) > 1:
+                        startdate = datetime.strptime(dates[0], 
                             const.DATEFORMAT).date()
-                        _ = datetime.strptime(dates[1], 
+                        enddate = datetime.strptime(dates[1], 
                             const.DATEFORMAT).date()
+                        if enddate < startdate:
+                            raise exceptions.DateTimespanError(
+                                'kolom: ' + columnname + ", regel: "
+                                + str(line_num) + ", tekst: " + item)
                     else:
                         _ = datetime.strptime(dates[0], 
                             const.DATEFORMAT).date()
-                except ValueError: 
+                except ValueError:
                     raise exceptions.DateFormatError(
                         'kolom: ' + columnname + ", regel: "
                         + str(line_num) + ", tekst: " + item)
-                    
 
-        #TODO test not_in_timespan, dates
 
 if __name__ == '__main__':
     csv_filename = 'vrijwilligers-2023-kw2.csv'

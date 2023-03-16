@@ -3,8 +3,14 @@ import sys
 # Don't print Traceback
 sys.tracebacklimit = 0
 
+class DateTimespanError(Exception):
+    """Exception raised if in two dates, the second date 
+    is smaller than the first.
+    """
+
 class DateFormatError(Exception):
-    """Exception raised if the format of a date doesn't conform to const.py.
+    """Exception raised if the format of a date 
+    doesn't conform to const.py.
     """
 
 class DuplicatePersonnameError(Exception):
