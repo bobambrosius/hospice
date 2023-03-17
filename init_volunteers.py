@@ -1,6 +1,7 @@
 from collections import namedtuple
 from datetime import datetime
 import re
+from types import SimpleNamespace
 
 from openpyxl import load_workbook
 
@@ -45,7 +46,7 @@ class Person:
     def __init__(self):
         self.name = "" 
         self.service = ""  # 'algemeen' or 'verzorger'  
-        self.shifts_per_weeks = ()  # namedtuple ShiftsPerWeeks
+        self.shifts_per_weeks = ()  # SimpleNamespace ShiftsPerWeeks
         self.not_on_shifts_per_weekday = dict()
         self.not_in_timespan = ()
         self.preferred_shifts = dict()
@@ -68,7 +69,7 @@ class Person:
 class Volunteers:
     """Volunteers is a collection of instances Person who work without
     fee for a hospice organisation.
-    
+
     .generalist_names:
         A set of person names who's service is generic.
     .caretaker_names:
@@ -153,113 +154,102 @@ class Volunteers:
         else:
             return {}
 
-    def _read_volunteersfile(self, infile):
-        """read a prepared xls file <infile>.
+    def _read_volunteersfile(self, sourcefile):
+        """read a prepared xls file <sourcefile>.
         The attributes are extracted from the column names.
         Read the values from the xls file.
         Assign the values to the an instance of class 'Person'.
         Return a list of the instances 'Person'.
         """
         volunteers = []
-        ShiftsPerWeeks = namedtuple('ShiftsPerWeeks', ['shifts', 'per_weeks'])
         
-        wb = load_workbook(filename=infile, data_only=True)
+        wb = load_workbook(filename=sourcefile, data_only=True)
         ws = wb.active
         reader = ws.iter_rows(min_col=10, values_only=True)
 
         # get names from column headers
-        # TODO kolomnamen kunnen geen spaties of '-' teken bevatten?
-        # TODO controle of wel wel headers zijn
         Data = namedtuple("Data", next(reader))
         # start enumerating with line number 2
         for line_num, xls_data in enumerate(map(Data._make, reader), 2):
-            try:
-                # read only the Active persons
-                if (xls_data.Actief):
+            # read only the Active persons
+            if (xls_data.Actief):
 
-                    # Column Service
-                    # TODO Iemand kan zowel verzorger als algemeen zijn!!
-                    # Moet dus een list worden i.p.v. string, 
-                    # met test op 'in' i.p.v. ==
-                    service = xls_data.Service or ""
-                    service = service.strip()
-                    self._check_sanity("service", service, "Service", line_num)
+                # Column Service
+                # TODO Iemand kan zowel verzorger als algemeen zijn!!
+                # Moet dus een list worden i.p.v. string, 
+                # met test op 'in' i.p.v. ==
+                service = xls_data.Service or ""
+                service = service.strip()
+                self._check_sanity("service", service, "Service", line_num)
 
-                    # Columns Achternaam, Tussenv, Voornaam
-                    # Person name
-                    insert = xls_data.Tussenv or ""
-                    if insert.strip():
-                        pass
-                    if insert.strip():
-                        insert = " " + insert
-                    givenname = xls_data.Voornaam or ""
-                    surname = xls_data.Achternaam or "" 
-                    name = (givenname.strip() + insert + " " + surname.strip())
+                # Columns Achternaam, Tussenv, Voornaam
+                # Person name
+                insert = xls_data.Tussenv or ""
+                if insert.strip():
+                    pass
+                if insert.strip():
+                    insert = " " + insert
+                givenname = xls_data.Voornaam or ""
+                surname = xls_data.Achternaam or "" 
+                name = (givenname.strip() + insert + " " + surname.strip())
 
-                    # Column NietOpDagEnDienst
-                    not_on_shifts_per_weekday = (
-                        xls_data.NietOpDagEnDienst or "")
-                    not_on_shifts_per_weekday = (
-                        self.day_and_shifts_to_dict(not_on_shifts_per_weekday,
-                        'NietOpDagEnDienst', line_num))
-                    
-                    # Column VoorkeurDagEnDienst
-                    # preferred_shifts (prefs)
-                    preferred_shifts = xls_data.VoorkeurDagEnDienst or ""
-                    prefs_dict = (
-                        self.day_and_shifts_to_dict(preferred_shifts,
-                        'VoorkeurDagEnDienst', line_num))
-                    
-                    # Column DienstenPerAantalWeken
-                    # shifts_per_weeks namedtuple
-                    # xls OpenOffice is confusing. Even though the column
-                    # is formatted as text, the value 1,1 is read as 
-                    # a float! After entering the value *again*
-                    # it is read as a string.
-                    shifts_per_week = xls_data.DienstenPerAantalWeken or ""
-                    shifts_per_week = shifts_per_week.replace(" ", "")
-                    self._check_sanity("shifts_per_weeks", 
-                            shifts_per_week, "DienstenPerAantalWeken",
-                            line_num)
-                    shifts_per_week = (shifts_per_week.split(","))
-                    # Make namedtuple
-                    shifts_per_weeks = ShiftsPerWeeks._make(
-                        [int(shifts_per_week[0]), 
-                         int(shifts_per_week[1])])
+                # Column NietOpDagEnDienst
+                not_on_shifts_per_weekday = (
+                    xls_data.NietOpDagEnDienst or "")
+                not_on_shifts_per_weekday = (
+                    self.day_and_shifts_to_dict(not_on_shifts_per_weekday,
+                    'NietOpDagEnDienst', line_num))
+                
+                # Column VoorkeurDagEnDienst
+                # preferred_shifts (prefs)
+                preferred_shifts = xls_data.VoorkeurDagEnDienst or ""
+                prefs_dict = (
+                    self.day_and_shifts_to_dict(preferred_shifts,
+                    'VoorkeurDagEnDienst', line_num))
+                
+                # Column DienstenPerAantalWeken
+                # xls OpenOffice is confusing. Even though the column
+                # is formatted as text, the value 1,1 is read as 
+                # a float! After entering the value *again*
+                # it is read as a string.
+                shifts_per_week = xls_data.DienstenPerAantalWeken or ""
+                shifts_per_week = shifts_per_week.replace(" ", "")
+                self._check_sanity("shifts_per_weeks", 
+                        shifts_per_week, "DienstenPerAantalWeken",
+                        line_num)
+                shifts_per_week = (shifts_per_week.split(","))
+                shifts_per_weeks = SimpleNamespace(
+                    shifts=int(shifts_per_week[0]),
+                    per_weeks=int(shifts_per_week[1]))
 
-                    # availability_counter (no column)
-                    availability_counter = shifts_per_weeks.shifts
-                    
-                    # weekend counter (no column)
-                    # Initially everybody is available for weekends
-                    weekend_counter = const.WEEKENDCOUNTER
+                # availability_counter (no column)
+                availability_counter = shifts_per_weeks.shifts
+                
+                # weekend counter (no column)
+                # Initially everybody is available for weekends
+                weekend_counter = const.WEEKENDCOUNTER
 
-                    # Column NietInPeriode
-                    not_in_timespan_value = xls_data.NietInPeriode or ""
-                    not_in_timespan = tuple( 
-                        period for period in
-                        not_in_timespan_value.replace(" ", "").split(",") 
-                    )
-                    self._check_sanity('dates_string', 
-                        not_in_timespan, 'NietInPeriode', line_num)
+                # Column NietInPeriode
+                not_in_timespan_value = xls_data.NietInPeriode or ""
+                not_in_timespan = tuple( 
+                    period for period in
+                    not_in_timespan_value.replace(" ", "").split(",") 
+                )
+                self._check_sanity('dates_string', 
+                    not_in_timespan, 'NietInPeriode', line_num)
 
-                    # Now we have all the data to instantiate a Person
-                    person = Person()
-                    person.name = name
-                    person.service = service
-                    person.not_on_shifts_per_weekday = (
-                        not_on_shifts_per_weekday)
-                    person.shifts_per_weeks = shifts_per_weeks
-                    person.not_in_timespan = not_in_timespan
-                    person.preferred_shifts = prefs_dict
-                    person.availability_counter = availability_counter
-                    person.weekend_counter = weekend_counter
-                    volunteers.append(person)
-            # TODO The value error still comes 
-            # from namedtuple("data", next(reader))!
-            # reraise??
-            except exceptions.InvalidColumnHeaderError:
-                exit()
+                # Now we have all the data to instantiate a Person
+                person = Person()
+                person.name = name
+                person.service = service
+                person.not_on_shifts_per_weekday = (
+                    not_on_shifts_per_weekday)
+                person.shifts_per_weeks = shifts_per_weeks
+                person.not_in_timespan = not_in_timespan
+                person.preferred_shifts = prefs_dict
+                person.availability_counter = availability_counter
+                person.weekend_counter = weekend_counter
+                volunteers.append(person)
         return tuple(volunteers)
 
     def _check_sanity(self, test, operand=None, 
