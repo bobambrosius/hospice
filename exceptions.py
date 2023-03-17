@@ -1,7 +1,7 @@
 import sys
 
 # Maximum levels of Traceback. 0 = off
-sys.tracebacklimit = 0
+sys.tracebacklimit = 2
 
 
 class DateTimespanError(Exception):

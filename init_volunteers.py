@@ -48,8 +48,8 @@ class Person:
         self.service = ""  # 'algemeen' or 'verzorger'  
         self.shifts_per_weeks = ()  # SimpleNamespace ShiftsPerWeeks
         self.not_on_shifts_per_weekday = dict()
-        self.not_in_timespan = ()
         self.preferred_shifts = dict()
+        self.not_in_timespan = ()
         self.availability_counter = 0 
         self.weekend_counter = 4
 
@@ -57,10 +57,11 @@ class Person:
         return (
             f'{self.name}, '
             f'{self.service:10}, '
-            f'shifts_per_weeks: {tuple(self.shifts_per_weeks)}, '
+            f'shifts_per_weeks: ({self.shifts_per_weeks.shifts}, '
+            f'{self.shifts_per_weeks.per_weeks}), '
             f'not_on_shifts_per_weekday: {self.not_on_shifts_per_weekday}, '
-            f'not_in_timespan: {self.not_in_timespan}, '
             f'preferred_shifts: {self.preferred_shifts}, '
+            f'not_in_timespan: {self.not_in_timespan}, '
             f'availability_counter: {self.availability_counter}, '
             f'weekend_counter: {self.weekend_counter}'
         )
@@ -114,7 +115,7 @@ class Volunteers:
         print(f'Er zijn {len(self.generalist_names)} algemenen beschikbaar.')
         print()
 
-    def show_data(self):
+    def print_volunteers(self):
         print()
         for p in self.persons:
             print(p)
@@ -192,6 +193,8 @@ class Volunteers:
                 givenname = xls_data.Voornaam or ""
                 surname = xls_data.Achternaam or "" 
                 name = (givenname.strip() + insert + " " + surname.strip())
+                if name == 'Hermien Heuvelman':
+                    pass
 
                 # Column NietOpDagEnDienst
                 not_on_shifts_per_weekday = (
@@ -351,5 +354,5 @@ class Volunteers:
 if __name__ == '__main__':
     xls_filename = 'vrijwilligers-2023-kw2.xlsx'
     group = Volunteers(xls_filename)
-    # group.show_data()
+    # group.print_volunteers()
     group.show_count()
