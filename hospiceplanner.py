@@ -1,13 +1,15 @@
-import csv
+import argparse
 from collections import Counter
+import csv
 from datetime import datetime
 from datetime import timedelta
 import locale
-from ordered_set import OrderedSet
 from pathlib import Path
 import random
-import argparse
 import textwrap
+
+from ordered_set import OrderedSet
+
 import init_agenda
 import init_volunteers
 import const
@@ -18,13 +20,12 @@ class Scheduler:
     """Class Scheduler does only one thing.
     It schedules volunteers in a prepared agenda:
     2 persons on each of the 4 shifs per day.
-    One person is a caretaker and the other one is 'general' 
+    One person is a caretaker and the other one is 'general'
     i.e. not a specialist.
-    Scheduler has to account for personal wishes 
+    Scheduler has to account for personal wishes
     like no being available on a specific weekday.
     Oh, and it can write the schedule to a csv file.
     """
-
     def __init__(self, year, quarter, version, agenda, volunteers):
 
         # Show month- and weeknames in Dutch
@@ -35,18 +36,17 @@ class Scheduler:
         self.quarter = quarter
         self.version = version
         self.agenda = agenda
-        
         self.Volunteers = volunteers
-        self.all_persons = volunteers.persons 
+        self.all_persons = volunteers.persons
 
         # Prepare the agenda with personal wishes,
         # en register the availability in each agenda item .
-        self._apply_static_rules() 
+        self._apply_static_rules()
 
         self.generalist_names = volunteers.generalist_names
         self.caretaker_names = volunteers.caretaker_names
         # first weeknr of the year quarter
-        self.currentweek = self.agenda.items[0].weeknr 
+        self.currentweek = self.agenda.items[0].weeknr
         
         # Get the holydays of this year in datetime.date format
         self.holydays = holyday.determine_holydays(self.year)
@@ -80,7 +80,7 @@ class Scheduler:
         """Exclude the persons that are marked as 
         not available for this shift.
         """
-        group_not_available = set( tuple(agenda_item.persons_not_avlbl) )
+        group_not_available = set(tuple(agenda_item.persons_not_avlbl))
 
         # Also not available are the persons with availability_counter = 0
         # EXCEPT in the weekends (isoweeknumbers 6,7). 
@@ -94,29 +94,33 @@ class Scheduler:
         # Without this exception they could be scheduled for more 
         # than 2 times a week, and that is too much.
         # We only have to test if the person is this week in 2 shifts or more.
-        if agenda_item.date.isoweekday() in (6,7):
+        if agenda_item.date.isoweekday() in (6, 7):
             # It's a weekend.
             # Search persons with more than 1 shifts so far this week
             # and save them in a list.
-            persons_scheduled_this_week = [ ag_item.persons for ag_item in self.agenda.items 
-                     if ag_item.weeknr == agenda_item.weeknr ]
-            flatlist = [ item for sublist in persons_scheduled_this_week for item in sublist ]
-            # Get a dict of all scheduled persons and count-of scheduled this week
+            persons_scheduled_this_week = ([
+                ag_item.persons 
+                for ag_item in self.agenda.items 
+                if ag_item.weeknr == agenda_item.weeknr])
+            flatlist = [item for sublist in persons_scheduled_this_week 
+                        for item in sublist]
+            # Get a dict of all scheduled persons 
+            # and count-of scheduled this week
             cnt = Counter(flatlist)
             # Extract the persons that are scheduled more than once.
             # They are not available.
-            scheduled_2_times = [ key for key in cnt.keys() if cnt[key] > 1 ]
+            scheduled_2_times = [key for key in cnt.keys() if cnt[key] > 1]
 
-            dynamic_not_available = set(tuple([ p.name 
-                for p in self.all_persons 
+            dynamic_not_available = (set(tuple([
+                p.name for p in self.all_persons 
                 if p.weekend_counter != const.WEEKENDCOUNTER 
-                or p.name in scheduled_2_times]))
+                or p.name in scheduled_2_times])))
         else:
             # Not a weekend day. Normal rules apply.
             # Unavailable if counter == 0.
-            dynamic_not_available = set(tuple([ p.name 
-                for p in self.all_persons 
-                if p.availability_counter == 0 ]))
+            dynamic_not_available = set(tuple([
+                p.name for p in self.all_persons 
+                if p.availability_counter == 0]))
 
         group_not_available.update(dynamic_not_available)
         
@@ -142,9 +146,10 @@ class Scheduler:
             that person is here chosen before others.
             """
             candidates = []
-            persons = [ p for p in self.all_persons 
-                        if p.preferred_shifts 
-                        and p.service == service ]
+            persons = [
+                p for p in self.all_persons
+                if p.preferred_shifts
+                and p.service == service]
             for person in persons:
                 if person.name in diff_group:
                     for pref_weekday, pref_shifts\
@@ -159,10 +164,10 @@ class Scheduler:
                         # the first day.
                         if (agenda_item.weekday == pref_weekday
                                 and agenda_item.shift 
-                                in random.sample(pref_shifts,1)): 
+                                in random.sample(pref_shifts, 1)):
                             candidates.append(person.name)
             if candidates:
-                [ selected ] = random.sample(candidates, 1)
+                [selected] = random.sample(candidates, 1)
                 return selected
             else:
                 return None
@@ -176,11 +181,10 @@ class Scheduler:
             current_shift = agenda_item.shift
             
             # Make a list of persons that heve a preferred shift
-            tmp_group = [ (p.name, p.preferred_shifts) 
-                      for p in self.all_persons 
-                      if p.service == service
-                      and p.preferred_shifts 
-                    ]
+            tmp_group = [(
+                p.name, p.preferred_shifts)
+                for p in self.all_persons
+                if p.service == service and p.preferred_shifts]
             
             result = []
             for prs, pref in tmp_group:
@@ -189,11 +193,11 @@ class Scheduler:
                 # than do not remove the person from the
                 # available persons, because it IS the preferred
                 # day and shift matching the current day and shift.
-                if not (current_weekday in pref.keys() 
-                            and current_shift in pref[current_weekday]):
+                if not (current_weekday in pref.keys()
+                        and current_shift in pref[current_weekday]):
                     for pref_weekday in pref.keys():
                         # If the pref_weekday is in the future,
-                        # Add this person. She wil be discarded for 
+                        # Add this person. She wil be discarded for
                         # this agenda item.
                         if pref_weekday > current_weekday:
                             result.append(prs)
@@ -204,8 +208,9 @@ class Scheduler:
                             for pref_shift in pref[pref_weekday]:
                                 # AND if the pref_shift is later on the day
                                 if pref_shift > current_shift:
-                                    # Then add the person to the list of persons
-                                    # to be discarded for the current shift.
+                                    # Then add the person to the list of
+                                    # persons to be discarded 
+                                    # for the current shift.
                                     result.append(prs)
                                     break
 
@@ -215,7 +220,6 @@ class Scheduler:
                 # In that case no preference is honoured.
                 if len(diff_group) > 1:
                     diff_group.discard(person)
-
 
         # Do not schedule on a holyday
         if agenda_item.date in self.holydays:
@@ -227,8 +231,10 @@ class Scheduler:
             diff_group_generic = self.generalist_names - group_not_available
             diff_group_caretaker = self.caretaker_names - group_not_available
                 
-            remove_persons_with_future_prefs('algemeen', diff_group_generic, agenda_item)
-            remove_persons_with_future_prefs('verzorger', diff_group_caretaker, agenda_item)
+            remove_persons_with_future_prefs(
+                'algemeen', diff_group_generic, agenda_item)
+            remove_persons_with_future_prefs(
+                'verzorger', diff_group_caretaker, agenda_item)
 
             # Select a random sample of 1 person 
             # as a list of 1 item from both sets.
@@ -240,7 +246,7 @@ class Scheduler:
             # Choose generalist
             if diff_group_generic:
                 diff_group_generic = tuple(diff_group_generic)
-                pref_person =  helper_pref_person(
+                pref_person = helper_pref_person(
                     'algemeen', diff_group_generic)
                 if pref_person:
                     person_generic = pref_person
@@ -248,12 +254,12 @@ class Scheduler:
                     [person_generic] = random.sample(
                         diff_group_generic, 1)
             else:
-                person_generic = "" # nobody is available
+                person_generic = ""  # nobody is available
                 
             # Choose caretaker
             if diff_group_caretaker:
                 diff_group_caretaker = tuple(diff_group_caretaker)
-                pref_person =  helper_pref_person(
+                pref_person = helper_pref_person(
                     'verzorger', diff_group_caretaker)
                 if pref_person:
                     person_caretaker = pref_person
@@ -261,7 +267,7 @@ class Scheduler:
                     [person_caretaker] = random.sample(
                         diff_group_caretaker, 1)
             else:
-                person_caretaker = "" # nobody is available
+                person_caretaker = ""  # nobody is available
         
         agenda_item.persons.append(person_caretaker)
         agenda_item.persons.append(person_generic)
@@ -270,10 +276,10 @@ class Scheduler:
         # reset the weekend counter So that she will
         # not be scheduled in a weekend for the next
         # three weeks (untill the counter reaches WEEKENDCOUNTER).
-        if agenda_item.date.isoweekday() in (6,7):
+        if agenda_item.date.isoweekday() in (6, 7):
             persons = self.Volunteers.find([person_caretaker, person_generic])
             for p in persons:
-                if  not p.name in const.PERSONS_ALWAYS_IN_WEEKEND:
+                if p.name not in const.PERSONS_ALWAYS_IN_WEEKEND:
                     p.weekend_counter = 0
 
     def _update_persons_not_avlbl(self, current_agenda_item):
@@ -303,41 +309,39 @@ class Scheduler:
             #   because only then already 2 shifts has been planned, 
             #   of the three available shifts
             #   or 1 shift has been planned of the available 2 shifts.
-            for shiftcount, per_weeks in shifts_per_weeks_argument: 
-                person_selection= [ 
-                        p for p in self.all_persons 
-                        if p.name in current_agenda_item.persons 
+            for shiftcount, per_weeks in shifts_per_weeks_argument:
+                person_selection = [p for p in self.all_persons
+                        if p.name in current_agenda_item.persons
                         and (p.shifts_per_weeks.shifts == shiftcount
-                            and p.shifts_per_weeks.per_weeks == per_weeks
-                            and p.availability_counter == 1)
-                    ]
+                        and p.shifts_per_weeks.per_weeks == per_weeks
+                        and p.availability_counter == 1)]
                 if person_selection:
                     # select all agenda items for this week
-                    ag_items = [ i for i in self.agenda.items
-                                if i.weeknr == current_agenda_item.weeknr ]
+                    ag_items = [i for i in self.agenda.items
+                                if i.weeknr == current_agenda_item.weeknr]
                     # make the volunteers unavailable for this week
                     for item in ag_items:
                         for p in person_selection:
-                                item.persons_not_avlbl.add(p.name)
+                            item.persons_not_avlbl.add(p.name)
 
                     # If 2 times per 3 weeks, then 
                     # make the next week also unavailable.
                     # Same for 1 time in 2 weeks.
-                    if ( (shiftcount == 2 and per_weeks == 3)
-                            or (shiftcount == 1 and per_weeks ==2) ):
+                    if ((shiftcount == 2 and per_weeks == 3)
+                            or (shiftcount == 1 and per_weeks == 2)):
                         # select all agenda items for the next  week
-                        ag_items = [ i for i in self.agenda.items
+                        ag_items = [i for i in self.agenda.items
                                     if i.weeknr == 
-                                    current_agenda_item.weeknr + 1 ]
+                                    current_agenda_item.weeknr + 1]
                         # make the agenda items unavailable for this week
                         for item in ag_items:
                             for p in person_selection:
-                                    item.persons_not_avlbl.add(p.name)
+                                item.persons_not_avlbl.add(p.name)
 
         current_day = current_agenda_item.date
         next_day = current_day + timedelta(days=1)
-        agenda_items = [ i for i in self.agenda.items
-                     if (i.date == current_day or i.date == next_day) ]
+        agenda_items = [i for i in self.agenda.items
+                        if (i.date == current_day or i.date == next_day)]
         for item in agenda_items:
             for person_name in current_agenda_item.persons:
                 # '.persons' is: [personname generic, personname caretaker]
@@ -346,9 +350,9 @@ class Scheduler:
         # Make the person unavailable for the rest of the week,
         # because the capacity must be distributed
         # over more than one week.
-        all_week_not_available( [(3,2),(2,3),(1,2)] )
+        all_week_not_available([(3, 2), (2, 3), (1, 2)])
         
-        #TODO it is possible that a person has a shift 
+        # TODO it is possible that a person has a shift 
         #   on the last day of the quarter.
         #   The scheduler of the next quarter has no knowledge 
         #   of te former planning.
@@ -363,25 +367,26 @@ class Scheduler:
         If a person has shift_per_weeks = (1,1) then she is not
         available for the rest of the week.
         """
-        #We need the objects here, not just te names.
-        persons = [ p for p in self.all_persons 
-                    if p.name in agenda_item.persons ]
+        # We need the objects here, not just te names.
+        persons = [p for p in self.all_persons
+                   if p.name in agenda_item.persons]
         # persons = 
         #   [instance of a person_generic, instance of a person_caretaker]
         for p in persons:
             # Prevent counting below zero. 
             # Use max() which return the maximum value of two.
-            p.availability_counter = max(0, p.availability_counter-1)
+            p.availability_counter = max(0, p.availability_counter - 1)
 
     def _update_weekend_counter(self):
-        """Every WEEKENDCOUNTER weeks a volunteer must participate in a pool for 
-        weekend scheduling. When a person has been scheduled,
+        """Every WEEKENDCOUNTER weeks a volunteer must participate in a pool
+        for weekend scheduling. When a person has been scheduled,
         the weekend_counter is set to 0. At the start of a new 
         week the scheduler increments the weekend_counter.
         """
         for person in self.all_persons:
             # Prevent counting above WEEKENDCOUNTER.
-            person.weekend_counter = min(const.WEEKENDCOUNTER, person.weekend_counter + 1)
+            person.weekend_counter = (
+                min(const.WEEKENDCOUNTER, person.weekend_counter + 1))
 
     def _reset_availability_counter(self, currentweek):
         """A volunteer must not be in more shifts 
@@ -394,9 +399,9 @@ class Scheduler:
             if person.availability_counter == 0:
                 # EXCEPT when a person's preference is 1x per 2 weeks.
                 # Then the reset is done every ODD week. 
-                if not ( person.shifts_per_weeks.shifts == 1 
+                if not (person.shifts_per_weeks.shifts == 1 
                         and person.shifts_per_weeks.per_weeks == 2
-                        and currentweek % 2 ):
+                        and currentweek % 2):
                     person.availability_counter = (
                         person.shifts_per_weeks.shifts)
 
@@ -413,8 +418,8 @@ class Scheduler:
             for item in person.not_on_shifts_per_weekday.items():
                 weekday, shifts = item
                 for shift in shifts:
-                    #TODO HIER BEGRIJP IK NIETS VAN
-                    #found_items = self.agenda.finditem(
+                    # TODO HIER BEGRIJP IK NIETS VAN
+                    # found_items = self.agenda.finditem(
                     #    weekday = weekday, shift = shift)
                     found_items = []
                     for ag_item in self.agenda.items:
@@ -423,7 +428,6 @@ class Scheduler:
                             found_items.append(ag_item)
                     for i in found_items:
                         i.persons_not_avlbl.add(person.name)
-                        #print(i)
 
             # person is not working between dates 
             # person.not_in_timespan: 
@@ -436,37 +440,35 @@ class Scheduler:
     def write_agenda_to_csv_file(self, filename):
         """Write the agenda to the csv file <filename>.
         """
-        dateformat = "%-d %b" # day - short monthname
+        dateformat = "%-d %b"  # day - short monthname
         
-        with open(filename, 'w') as f:
+        with open(filename, mode='w', encoding='UTF-8') as f:
             writer = csv.writer(f, delimiter=const.CSV_DELIMITER, 
                 quotechar='"', quoting=csv.QUOTE_ALL)
             row = (f"Hospice planning {str(self.quarter)}e kwartaal "
                    f'{str(self.year)}, versie {str(self.version)}')
             writer.writerow([row])
-            #writer.writerow(["Productiedatum", datetime.now()])
             writer.writerow([])
             
-            weekscount = 13 # number of weeks in a quarter
+            weekscount = 13  # number of weeks in a quarter
             # from the first day of a quarter to the last + 1
             weekrange = range( 
-                (self.quarter -1) * weekscount +1, 
-                (self.quarter * weekscount) + 1 )
+                (self.quarter - 1) * weekscount + 1,
+                (self.quarter * weekscount) + 1)
 
             for pagebreak_indicator, week in enumerate(weekrange):
                 # Pagebreak after every two weeks
                 if pagebreak_indicator > 1 and not (pagebreak_indicator % 2):
                     writer.writerow(["pagebreak"])
 
-                #for i in range(1,): writer.writerow([])
-                writer.writerow(["","","","", "WEEK " + str(week)])
+                writer.writerow(["", "", "", "", "WEEK " + str(week)])
                 writer.writerow([])
-                writer.writerow(["", "maandag", "dinsdag", "woensdag", 
-                    "donderdag", "vrijdag", "zaterdag", "zondag"])
+                writer.writerow(["", "maandag", "dinsdag", "woensdag",
+                                 "donderdag", "vrijdag", "zaterdag", "zondag"])
                 
                 # get the agenda items for this week
                 ag_items = [i for i in self.agenda.items 
-                            if i.weeknr == week ]
+                            if i.weeknr == week]
 
                 # row with dates, below 'week' indication
                 dates = OrderedSet(tuple(
@@ -483,14 +485,14 @@ class Scheduler:
 
                 # A row for each shift, with the names of 
                 # 7 caretakers and 7 general service persons
-                for shift in range(1,5):
-                    caretakers = [ i.persons[0] 
-                        for i in ag_items if i.shift == shift ]
+                for shift in range(1, 5):
+                    caretakers = [i.persons[0]
+                                  for i in ag_items if i.shift == shift]
                     row = [const.SHIFTNUMBER_LABEL_LOOKUP[shift]]
                     row.extend(list(map(no_volunteer_in_shift, caretakers)))
                     writer.writerow(row) 
-                    generalists = [ i.persons[1] 
-                        for i in ag_items if i.shift == shift ]
+                    generalists = [i.persons[1] 
+                        for i in ag_items if i.shift == shift]
                     row = [""]
                     row.extend(list(map(no_volunteer_in_shift, generalists)))
                     writer.writerow(row) 
@@ -505,7 +507,7 @@ class Scheduler:
             date = ''
             for i in self.agenda.items:
                 if i.weekday == 1 and weekday_nr == 7: 
-                    f.write('-'*80 + '\n') # Draw a line at a new week
+                    f.write('-' * 80 + '\n')  # Draw a line at a new week
                 weekday_nr = i.weekday
                 weekday = const.WEEKDAY_NAME_LOOKUP[weekday_nr]
                 if i.date != date:
@@ -516,29 +518,24 @@ class Scheduler:
             print(f'Bestand opgeslagen: {filename}')
 
     def prettyprint(self):
-        format = \
-            '{i.date} ' +\
-            'wn:{i.weeknr:>2} ' +\
-            'wd:{i.weekday} ' +\
-            'sh:{i.shift} ' +\
-            '{i.persons}'
         for i in self.agenda.items:
             print(f'{i.date} '
-                    f'wn:{i.weeknr:>2} '
-                    f'wd:{i.weekday} '
-                    f'sh:{i.shift} {i.persons}\n')
+                  f'wn:{i.weeknr:>2} '
+                  f'wd:{i.weekday} '
+                  f'sh:{i.shift} {i.persons}\n')
 
     def not_scheduled_shifts(self):
-        caretakers = [ ag_item for ag_item in self.agenda.items
-                if not ag_item.persons[0]
-                and ag_item.date not in self.holydays ]
-        generalists = [ ag_item for ag_item in self.agenda.items
-                if not ag_item.persons[1]
-                and ag_item.date not in self.holydays ]
+        caretakers = [ag_item for ag_item in self.agenda.items
+                      if not ag_item.persons[0]
+                      and ag_item.date not in self.holydays]
+        generalists = [ag_item for ag_item in self.agenda.items
+                       if not ag_item.persons[1]
+                       and ag_item.date not in self.holydays]
         cc = len(caretakers)
         gc = len(generalists)
         total = cc + gc
-        print(f'Aantal ongepland diensten, verzorgers: {cc}, algemenen: {gc}. Totaal: {total}') 
+        print(f'Aantal ongepland diensten, verzorgers: {cc}, '
+              f'algemenen: {gc}. Totaal: {total}') 
 
     def persons_not_scheduled_in_weekend(self):
         """After de scheduler is finished, determine which persons
@@ -546,11 +543,11 @@ class Scheduler:
         """
         scheduled_volunteers = set()
         for ag_item in self.agenda.items:
-            if ag_item.weekday in (6,7):
+            if ag_item.weekday in (6, 7):
                 scheduled_volunteers.update(ag_item.persons)
 
-        all_volunteers = set(tuple([ p.name
-            for p in self.all_persons ]))
+        all_volunteers = set(tuple([
+            p.name for p in self.all_persons]))
 
         unscheduled = all_volunteers - scheduled_volunteers
         if unscheduled:
@@ -558,7 +555,6 @@ class Scheduler:
             print('\nDe volgende vrijwilligers zijn niet ' + 
                 'ingepland in het weekend:')
             for person in self.Volunteers.find(unscheduled):
-                #print(person)
                 print(f'{person.name:20} {person.service:10} '
                       f'{tuple(person.shifts_per_weeks)} ' 
                       f'{person.not_on_shifts_per_weekday}'
@@ -573,8 +569,8 @@ class Scheduler:
             for person_name in ag_item.persons:
                 scheduled_volunteers.add(person_name)
         
-        all_volunteers = set(tuple([ p.name
-            for p in self.all_persons ]))
+        all_volunteers = set(tuple([
+            p.name for p in self.all_persons]))
 
         unscheduled = all_volunteers - scheduled_volunteers
         if unscheduled:
@@ -614,27 +610,26 @@ def main(args):
                    + str(quarter) + 'e kwartaal ' 
                    + str(year) 
                    + ' v. ' + str(version))
-    #if file_exists(outfilename, '.csv'):
+    # if file_exists(outfilename, '.csv'):
     #    exit()
     scheduler.write_agenda_to_txt_file(outfilename + '.txt')
     scheduler.write_agenda_to_csv_file(outfilename + '.csv')
     
     if args.verbose:
         scheduler.persons_not_scheduled()
-        #scheduler.persons_not_scheduled_in_weekend()
+        # scheduler.persons_not_scheduled_in_weekend()
         scheduler.not_scheduled_shifts()
     
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-            description='Agenda planner voor hospice, Rijssen',
-            formatter_class=argparse.RawDescriptionHelpFormatter,
-            epilog=textwrap.dedent(
+        description='Agenda planner voor hospice, Rijssen',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=textwrap.dedent(
             """Voorbeeld:
                 python hospiceplanner.py 2023 4 1 vrijwilligers-2023-kw1.csv
-            """)
-        )
-    parser.add_argument('year', 
+            """))
+    parser.add_argument('year',  
         help='voor wel jaar de planning gemaakt moet worden', type=int)
     parser.add_argument('quarter', 
         help='voor welk kwartaal', type=int)
@@ -643,12 +638,11 @@ if __name__ == '__main__':
     parser.add_argument("filename", 
         help='csv bestand met vrijwillergersgegevens')
     parser.add_argument('-v', '--verbose', 
-        help='More information about results of scheduling', action='store_true')
+        help='More information about results of scheduling',
+        action='store_true')
     args = parser.parse_args()
     
     if args.verbose:
         print("\nApplication arguments are: ", args)
 
     main(args)
-    
-    

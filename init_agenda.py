@@ -1,6 +1,7 @@
 from datetime import date as date_class
 from datetime import timedelta
 from datetime import datetime
+
 import const
 
 
@@ -9,6 +10,7 @@ class Planningelement:
     holds methods and information for one shift of which there are 4 in a day.
     We cannot use namedtuples here because the contents will be changed later.
     """
+    # But perhaps a SimpleNamespace will do!!
     def __init__(self):
         self.date = 'date_object'
         # shift: string. '1' = 7:00-11:00, '2' = 11:00-15:00, 
@@ -21,7 +23,8 @@ class Planningelement:
         # persons_not_avlbl: set of persons not available for this shift.
         self.persons_not_avlbl = set()  
         # Why a set? Because several functions add a person 
-        # to the set, and the same person must not be added twice.
+        # to the set, and the same person must not be 
+        # in the set more than once.
         
     def __repr__(self):
         return (

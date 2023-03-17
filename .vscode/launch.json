@@ -11,7 +11,7 @@
             "program": "${file}",
             "console": "integratedTerminal", // integratedTerminal or internalConsole (debug console)
             "justMyCode": true,
-            "args": ["2023", "2", "1", "vrijwilligers-2023-kw2.csv", "--verbose"], // ,"--verbose"
+            "args": ["2023", "2", "1", "vrijwilligers-2023-kw2.xlsx", "--verbose"], // ,"--verbose"
         }
     ]
 }

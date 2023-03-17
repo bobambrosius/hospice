@@ -1,8 +1,9 @@
 from collections import namedtuple
-from datetime import timedelta
 from datetime import datetime
 import re
+
 from openpyxl import load_workbook
+
 import const
 import exceptions
 
@@ -41,11 +42,10 @@ class Person:
         the counter is incremented by 1. While the counter is not yet 4,
         the person is not available for scheduling in the weekend.
     """
-
     def __init__(self):
         self.name = "" 
-        self.service = "" # 'algemeen' or 'verzorger'  
-        self.shifts_per_weeks = () # namedtuple ShiftsPerWeeks
+        self.service = ""  # 'algemeen' or 'verzorger'  
+        self.shifts_per_weeks = ()  # namedtuple ShiftsPerWeeks
         self.not_on_shifts_per_weekday = dict()
         self.not_in_timespan = ()
         self.preferred_shifts = dict()
@@ -53,7 +53,7 @@ class Person:
         self.weekend_counter = 4
 
     def __repr__(self):
-        return(
+        return (
             f'{self.name}, '
             f'{self.service:10}, '
             f'shifts_per_weeks: {tuple(self.shifts_per_weeks)}, '
@@ -87,15 +87,10 @@ class Volunteers:
         # Note: we use set operators on these groups and
         # the set operator 'difference' doesn't work on lists.
         # So we convert the list to a tuple and then to a set.
-        #gg = set( tuple([
-        #        p.name 
-        #        for p in self.persons 
-        #        if p.service == 'algemeen']) )
-        self.generalist_names = set(tuple( [
+        self.generalist_names = set(tuple([
                 p.name
                 for p in self.persons
-                if p.service == 'algemeen'
-            ]))
+                if p.service == 'algemeen']))
         self.caretaker_names = set(tuple([ 
                 p.name
                 for p in self.persons
@@ -124,7 +119,7 @@ class Volunteers:
         for p in self.persons:
             print(p)
 
-    def day_and_shifts_to_dict(self, 
+    def day_and_shifts_to_dict(self,
             day_and_shifts_string, columnname, line_num):
         """The day_and_shifts_string is 
         for example 'ma:1, 2,3,4#  wo:3,4 # zo:4.'
@@ -133,18 +128,18 @@ class Volunteers:
         and the shifts are in a tuple.
         """
         if day_and_shifts_string:
-            spaceless_string = day_and_shifts_string.replace(" ","")
+            spaceless_string = day_and_shifts_string.replace(" ", "")
             
             # Check the input string
             self._check_sanity('day_and_shifts_string', spaceless_string,
-                columnname = columnname, line_num = line_num)
+                columnname=columnname, line_num=line_num)
             
             # Remove the last '#' AFTER the sanity check
             spaceless_string = spaceless_string.strip('#')
             
             # Make a list of items in the string 
             # with delimiter = '#':
-            day_and_shifts_items = ( i for i in spaceless_string.split('#') )
+            day_and_shifts_items = (i for i in spaceless_string.split('#'))
             # day_and_shift_list is e.g. ['ma:1,2,3,4', 'wo:3,4', 'zo:4'] 
             result_dict = {}
             for item in day_and_shifts_items:
@@ -153,7 +148,7 @@ class Volunteers:
                 # Now make a dict with key = isoweekday number
                 # and value = tuple of shifts.
                 key = const.WEEKDAY_LOOKUP[sep_weekday_and_shift[0]] 
-                value = ( int(i) for i in sep_weekday_and_shift[1].split(",") )
+                value = (int(i) for i in sep_weekday_and_shift[1].split(","))
                 result_dict[key] = tuple(value)
             return result_dict
         else:
@@ -174,17 +169,17 @@ class Volunteers:
         reader = ws.iter_rows(min_col=10, values_only=True)
 
         # get names from column headers
-        #TODO kolomnamen kunnen geen spaties of '-' teken bevatten?
-        #TODO controle of wel wel headers zijn
+        # TODO kolomnamen kunnen geen spaties of '-' teken bevatten?
+        # TODO controle of wel wel headers zijn
         Data = namedtuple("Data", next(reader))
         # start enumerating with line number 2
         for line_num, xls_data in enumerate(map(Data._make, reader), 2):
             try:
                 # read only the Active persons
-                if (xls_data.Actief ):
+                if (xls_data.Actief):
 
                     # Column Service
-                    #TODO Iemand kan zowel verzorger als algemeen zijn!!
+                    # TODO Iemand kan zowel verzorger als algemeen zijn!!
                     # Moet dus een list worden i.p.v. string, 
                     # met test op 'in' i.p.v. ==
                     service = xls_data.Service or ""
@@ -196,17 +191,18 @@ class Volunteers:
                     insert = xls_data.Tussenv or ""
                     if insert.strip():
                         pass
-                    if insert.strip(): insert = " " + insert
+                    if insert.strip():
+                        insert = " " + insert
                     givenname = xls_data.Voornaam or ""
                     surname = xls_data.Achternaam or "" 
                     name = (givenname.strip() + insert + " " + surname.strip())
 
                     # Column NietOpDagEnDienst
-                    not_on_shifts_per_weekday = xls_data.NietOpDagEnDienst or ""
+                    not_on_shifts_per_weekday = (
+                        xls_data.NietOpDagEnDienst or "")
                     not_on_shifts_per_weekday = (
                         self.day_and_shifts_to_dict(not_on_shifts_per_weekday,
-                        'NietOpDagEnDienst', line_num) 
-                        )
+                        'NietOpDagEnDienst', line_num))
                     
                     # Column VoorkeurDagEnDienst
                     # preferred_shifts (prefs)
@@ -223,8 +219,7 @@ class Volunteers:
                     # a float! After entering the value *again*
                     # it is read as a string.
                     shifts_per_week = xls_data.DienstenPerAantalWeken or ""
-                    #shifts_per_week = str(shifts_per_week)
-                    shifts_per_week = shifts_per_week.replace(" ","")
+                    shifts_per_week = shifts_per_week.replace(" ", "")
                     self._check_sanity("shifts_per_weeks", 
                             shifts_per_week, "DienstenPerAantalWeken",
                             line_num)
@@ -232,7 +227,7 @@ class Volunteers:
                     # Make namedtuple
                     shifts_per_weeks = ShiftsPerWeeks._make(
                             [int(shifts_per_week[0]), 
-                             int(shifts_per_week[1])] )
+                             int(shifts_per_week[1])])
 
                     # availability_counter (no column)
                     availability_counter = shifts_per_weeks.shifts
@@ -245,7 +240,7 @@ class Volunteers:
                     not_in_timespan_value = xls_data.NietInPeriode or ""
                     not_in_timespan = tuple( 
                         period for period in
-                        not_in_timespan_value.replace(" ","").split(",") 
+                        not_in_timespan_value.replace(" ", "").split(",") 
                     )
                     self._check_sanity('dates_string', 
                         not_in_timespan, 'NietInPeriode', line_num)
@@ -262,22 +257,22 @@ class Volunteers:
                     person.availability_counter = availability_counter
                     person.weekend_counter = weekend_counter
                     volunteers.append(person)
-            #TODO The value error still comes 
+            # TODO The value error still comes 
             # from namedtuple("data", next(reader))!
             # reraise??
             except exceptions.InvalidColumnHeaderError:
                 exit()
         return tuple(volunteers)
 
-    def _check_sanity(self, test, operand = None, 
-                      columnname = None, line_num = None):
+    def _check_sanity(self, test, operand=None, 
+                      columnname=None, line_num=None):
         """Check the validity of the input data from the sourcefile.
         """
-        #------------------------------------------------------------
+        # ------------------------------------------------------------
         # Start of helper functions
         def find_duplicate_personnames(nameslist, name):
-            return [ idx for idx, value in enumerate(nameslist)
-                     if value == name ]
+            return [idx for idx, value in enumerate(nameslist)
+                    if value == name]
         
         def check_day_and_shifts_string(operand):
             # Return None if something is wrong.
@@ -295,8 +290,10 @@ class Volunteers:
             #   + comma seperated shiftnumber e.g (1,2,3,4) or (1,2) or (3)
             # and then an endless repetition of
             #   '#' + (the first part, ending with '#').
-            #TODO 2,2,3 should not match!
-            pattern = re.compile(r'^(((ma|di|wo|do|vr|za|zo)[:][1-4]([,][1-4])*)[#])*$')
+            # Example: ma:1,2,3,4# di:1,2,3# zo:4#
+            # TODO 2,2,3 should not match!
+            pattern = re.compile(
+                r'^(((ma|di|wo|do|vr|za|zo)[:][1-4]([,][1-4])*)[#])*$')
             return re.match(pattern, operand)
 
         def check_shifts_per_weeks(operand):
@@ -305,9 +302,9 @@ class Volunteers:
             return re.match(pattern, operand)
 
         # End of helper functions
-        #------------------------------------------------------------
+        # ------------------------------------------------------------
         if test == 'duplicate_names': 
-            nameslist = [ p.name for p in self.persons ]
+            nameslist = [p.name for p in self.persons]
             for name in nameslist:
                 if len(find_duplicate_personnames(nameslist, name)) > 1:
                     raise exceptions.DuplicatePersonnameError(name)
@@ -333,18 +330,18 @@ class Volunteers:
                     f'regel: {line_num}, '
                     f'tekst: {operand!r})')
 
-        if test == "dates_string" and all(operand) == True:
-            #TODO gekopieerd uit init_agenda!
-            #TODO hat jaar kan ook onjuist zijn, maar denk eraan
+        if test == "dates_string" and all(operand):
+            # TODO gekopieerd uit init_agenda!
+            # TODO hat jaar kan ook onjuist zijn, maar denk eraan
             # dat de kwartalen over het jaar heen gaan.
             for item in operand:
                 dates = item.split('>') 
                 try:
                     if len(dates) > 1:
                         startdate = datetime.strptime(dates[0], 
-                            const.DATEFORMAT).date()
+                                    const.DATEFORMAT).date()
                         enddate = datetime.strptime(dates[1], 
-                            const.DATEFORMAT).date()
+                                  const.DATEFORMAT).date()
                         if enddate < startdate:
                             raise exceptions.DateTimespanError(
                                 f'kolom: {columnname!r}, '
@@ -366,5 +363,5 @@ class Volunteers:
 if __name__ == '__main__':
     xls_filename = 'vrijwilligers-2023-kw2.xlsx'
     group = Volunteers(xls_filename)
-    #group.show_data()
+    # group.show_data()
     group.show_count()
