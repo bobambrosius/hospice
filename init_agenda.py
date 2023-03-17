@@ -45,9 +45,9 @@ class Agenda:
     def __init__(self, year, quarter):
         self.year = year
         self.quarter = quarter
-        self.items = self._initialize() # planningelementlist
+        self.items = self._initialize()  # planningelementlist
         
-    def finditem(self,  shift=None, weekday=None, timespan=None):
+    def finditem(self, shift=None, weekday=None, timespan=None):
         """Find an instance of Planningelement.
         Search forward starting with startindex.
         Return an iterable of all the found planningelements.
@@ -57,17 +57,17 @@ class Agenda:
         if (weekday and shift):
             result = []
             for item in self.items:
-               if ((item.shift == shift) and (item.weekday == weekday)):
-                   result.append(item)
+                if ((item.shift == shift) and (item.weekday == weekday)):
+                    result.append(item)
             return result
             
-            #result = [ item 
+            # result = [ item 
             #    for item in self.items 
             #    if ((item.shift == shift) and (item.weekday == weekday)) ]
-            #for i in result:
+            # for i in result:
             #    yield result
             
-            #for item in self.items:
+            # for item in self.items:
             #   if ((item.shift == shift) and (item.weekday == weekday)):
             #       yield item 
 
@@ -83,7 +83,7 @@ class Agenda:
 
         # Return all agenda items that are in a timespan.
         # Timespan has either two dates or one date
-        #TODO Test this function again!!!
+        # TODO Test this function again!!!
         if timespan:
             dates = timespan.split('>') 
             if len(dates) > 1:
@@ -101,7 +101,7 @@ class Agenda:
                     if self.items[i].date == currentdate:
                         # return all agenda items with this date
                         yield self.items[i] 
-                currentdate = currentdate + timedelta(days=1) # Next date
+                currentdate = currentdate + timedelta(days=1)  # Next date
 
     def _initialize(self):
         """Create a list of instances of class Planningelement 
@@ -114,29 +114,29 @@ class Agenda:
         planningelementlist = []
         currentday = startday
         while currentday <= endday:
-            for shift in range(1,5): # shift '1' to '4' on each day
+            for shift in range(1, 5):  # shift '1' to '4' on each day
                 element = Planningelement()
                 # instance of date_class e.g. datetime.date(2023, 11, 30)
                 element.date = currentday 
-                element.shift = shift # {1..4}
-                element.weeknr = currentday.isocalendar().week # {1..52}
-                element.weekday = currentday.isoweekday() # {1..7}
+                element.shift = shift  # {1..4}
+                element.weeknr = currentday.isocalendar().week  # {1..52}
+                element.weekday = currentday.isoweekday()  # {1..7}
                 
                 planningelementlist.append(element)
             currentday = currentday + timedelta(days=1)
         return planningelementlist
 
     def _get_first_and_last_day_of_quarter(
-            self, year, quarter, method = 'after'):
+            self, year, quarter, method='after'):
         """We need whole weeks, starting on a monday (isoweekday 1).
         If the first day of a year quarter is not a monday,
         find the first date that is a monday, going back if method = 'before'
         and going forward if method is 'after'.
         And m.m. for the last day of the quarter.
         """
-        quarter_end_date = [(3,31), (6,30), (9,30), (12,31)] 
-        quarter_start_date = [(1,1), (4,1), (7,1), (10,1)] 
-        quarter -= 1 # index starts on 0
+        quarter_end_date = [(3, 31), (6, 30), (9, 30), (12, 31)] 
+        quarter_start_date = [(1, 1), (4, 1), (7, 1), (10, 1)] 
+        quarter -= 1  # index starts on 0
         
         month = quarter_start_date[quarter][0]
         day = quarter_start_date[quarter][1]
@@ -147,9 +147,9 @@ class Agenda:
         endday = date_class(year, month, day)
         
         if method == 'after':
-            operator = 1 # Add a day
+            operator = 1  # Add a day
         else:
-            operator = -1 # Subtract a day
+            operator = -1  # Subtract a day
 
         while startday.isoweekday() != 1:
             startday = startday + timedelta(days=operator)

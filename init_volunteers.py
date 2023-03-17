@@ -88,14 +88,13 @@ class Volunteers:
         # the set operator 'difference' doesn't work on lists.
         # So we convert the list to a tuple and then to a set.
         self.generalist_names = set(tuple([
-                p.name
-                for p in self.persons
-                if p.service == 'algemeen']))
+            p.name
+            for p in self.persons
+            if p.service == 'algemeen']))
         self.caretaker_names = set(tuple([ 
-                p.name
-                for p in self.persons
-                if p.service == 'verzorger' 
-            ]))
+            p.name
+            for p in self.persons
+            if p.service == 'verzorger']))
 
     def find(self, namelist):
         """Return all found persons 
@@ -209,8 +208,7 @@ class Volunteers:
                     preferred_shifts = xls_data.VoorkeurDagEnDienst or ""
                     prefs_dict = (
                         self.day_and_shifts_to_dict(preferred_shifts,
-                        'VoorkeurDagEnDienst', line_num)
-                        )
+                        'VoorkeurDagEnDienst', line_num))
                     
                     # Column DienstenPerAantalWeken
                     # shifts_per_weeks namedtuple
@@ -226,8 +224,8 @@ class Volunteers:
                     shifts_per_week = (shifts_per_week.split(","))
                     # Make namedtuple
                     shifts_per_weeks = ShiftsPerWeeks._make(
-                            [int(shifts_per_week[0]), 
-                             int(shifts_per_week[1])])
+                        [int(shifts_per_week[0]), 
+                         int(shifts_per_week[1])])
 
                     # availability_counter (no column)
                     availability_counter = shifts_per_weeks.shifts

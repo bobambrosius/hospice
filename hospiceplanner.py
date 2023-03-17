@@ -27,7 +27,6 @@ class Scheduler:
     Oh, and it can write the schedule to a csv file.
     """
     def __init__(self, year, quarter, version, agenda, volunteers):
-
         # Show month- and weeknames in Dutch
         # in agenda.csv file.
         locale.setlocale(locale.LC_TIME, "nl_NL.utf8")

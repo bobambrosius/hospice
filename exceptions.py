@@ -38,8 +38,7 @@ class DayAndShiftsStringError(Exception):
         inputstring -- day_and_shifts_string with wrong format.
     """
     def __init__(self, inputstring, msg=(
-            f'formaat niet correct in kolom ')
-            ):
+            f'formaat niet correct in kolom ')):
         self.name = inputstring
         self.msg = msg
         super().__init__(self.msg + inputstring + '"')
@@ -55,8 +54,7 @@ class InvalidColumnHeaderError(ValueError):
             f'Kolomkop heeft een '
             f'ongeldige waarde. \n'
             f'Alleen alfabet teken en '
-            f'underscore is toegestaan.')
-            ):
+            f'underscore is toegestaan.')):
         self.name = columnheader
         self.msg = msg
         super().__init__(self.msg + ': "' + columnheader + '"')
