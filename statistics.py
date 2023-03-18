@@ -4,6 +4,7 @@ import init_volunteers
 
 SERVICES = ('algemeen', 'verzorger')
 
+
 def invert_not_on_shifts_per_weekday(all_persons):
     """Get the inverse, so on_shifts_per_weekday
     """

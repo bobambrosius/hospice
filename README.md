@@ -7,7 +7,7 @@ as comfortable as possible.
 The organisation has about 50 volunteers who need to be 
 scheduled in 4 shifts (of 4 hours) each day, starting at 7 PM.
 Each shift is scheduled for two volunteers: one caretaker
-(a specialist) and one generalist. The are two groups
+(a specialist) and one generalist. There are two groups
 of volunteers. 
 At night there are no volunteers but only professionals.
 A schedule is made per a quarter of a year,
