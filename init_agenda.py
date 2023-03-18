@@ -136,6 +136,6 @@ class Agenda:
 
 
 if __name__ == '__main__':
-    agenda = Agenda(year=2023, quarter=1)
+    agenda = Agenda(year=2023, quarter=2)
     for element in agenda.items:
         print(element)

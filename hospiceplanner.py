@@ -429,6 +429,7 @@ class Scheduler:
     def write_agenda_to_csv_file(self, filename):
         """Write the agenda to the csv file <filename>.
         """
+        # TODO write to .xlsx file 
         dateformat = "%-d %b"  # day - short monthname
         
         with open(filename, mode='w', encoding='UTF-8') as f:
@@ -494,24 +495,17 @@ class Scheduler:
         with open(filename, 'w') as f:
             weekday_nr = 0
             date = ''
-            for i in self.agenda.items:
-                if i.weekday == 1 and weekday_nr == 7: 
+            for item in self.agenda.items:
+                if item.weekday == 1 and weekday_nr == 7: 
                     f.write('-' * 80 + '\n')  # Draw a line at a new week
-                weekday_nr = i.weekday
-                weekday = const.WEEKDAY_NAME_LOOKUP[weekday_nr]
-                if i.date != date:
+                weekday_nr = item.weekday
+                weekdayname = const.WEEKDAY_NAME_LOOKUP[weekday_nr]
+                if item.date != date:
                     f.write('\n')
-                date = i.date
-                f.write(f'{i.date} wn:{i.weeknr:>2} {weekday} '
-                        f'sh:{i.shift} {i.persons}\n')
+                date = item.date
+                f.write(f'{item.date} wn:{item.weeknr:>2} {weekdayname} '
+                        f'sh:{item.shift} {item.persons}\n')
             print(f'Bestand opgeslagen: {filename}')
-
-    def prettyprint(self):
-        for i in self.agenda.items:
-            print(f'{i.date} '
-                  f'wn:{i.weeknr:>2} '
-                  f'wd:{i.weekday} '
-                  f'sh:{i.shift} {i.persons}\n')
 
     def not_scheduled_shifts(self):
         caretakers = [ag_item for ag_item in self.agenda.items
