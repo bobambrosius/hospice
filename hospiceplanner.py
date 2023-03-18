@@ -73,13 +73,13 @@ class Scheduler:
                 self._determine_group_not_available(agenda_item))
             self._schedule_2_persons(agenda_item, group_not_available)
             self._update_availability_counter(agenda_item)
-            self._update_persons_not_avlbl(agenda_item)
+            self._update_persons_not_available(agenda_item)
 
     def _determine_group_not_available(self, agenda_item):
         """Exclude the persons that are marked as 
         not available for this shift.
         """
-        group_not_available = set(tuple(agenda_item.persons_not_avlbl))
+        group_not_available = set(tuple(agenda_item.persons_not_available))
 
         # Also not available are the persons with availability_counter = 0
         # EXCEPT in the weekends (isoweeknumbers 6,7). 
@@ -281,8 +281,8 @@ class Scheduler:
                 if p.name not in const.PERSONS_ALWAYS_IN_WEEKEND:
                     p.weekend_counter = 0
 
-    def _update_persons_not_avlbl(self, current_agenda_item):
-        """Add persons to "persons_not_avlbl" of the
+    def _update_persons_not_available(self, current_agenda_item):
+        """Add persons to "persons_not_available" of the
         CURRENT and NEXT day, so that no person is scheduled 
         for two days in a row or for more than one shift on one day.
         Note: This person is also registered in the CURRENT agenda shift
@@ -291,7 +291,7 @@ class Scheduler:
         """
 
         def all_week_not_available(shifts_per_weeks_argument):
-            """HELPER function for _update_persons_not_avlbl().
+            """HELPER function for _update_persons_not_available().
             If a person works e.g. 3 times per *2* weeks
             then the 3 times must be distributed over 2 weeks.
             To prevent that a person gets a 3rd shift in 1 week,
@@ -321,7 +321,7 @@ class Scheduler:
                     # make the volunteers unavailable for this week
                     for item in ag_items:
                         for p in person_selection:
-                            item.persons_not_avlbl.add(p.name)
+                            item.persons_not_available.add(p.name)
 
                     # If 2 times per 3 weeks, then 
                     # make the next week also unavailable.
@@ -335,7 +335,7 @@ class Scheduler:
                         # make the agenda items unavailable for this week
                         for item in ag_items:
                             for p in person_selection:
-                                item.persons_not_avlbl.add(p.name)
+                                item.persons_not_available.add(p.name)
 
         current_day = current_agenda_item.date
         next_day = current_day + timedelta(days=1)
@@ -344,7 +344,7 @@ class Scheduler:
         for item in agenda_items:
             for person_name in current_agenda_item.persons:
                 # '.persons' is: [personname generic, personname caretaker]
-                item.persons_not_avlbl.add(person_name)
+                item.persons_not_available.add(person_name)
 
         # Make the person unavailable for the rest of the week,
         # because the capacity must be distributed
@@ -426,7 +426,7 @@ class Scheduler:
                                 and (ag_item.weekday == weekday)):
                             found_items.append(ag_item)
                     for i in found_items:
-                        i.persons_not_avlbl.add(person.name)
+                        i.persons_not_available.add(person.name)
 
             # person is not working between dates 
             # person.not_in_timespan: 
@@ -434,7 +434,7 @@ class Scheduler:
             for timespan in person.not_in_timespan:
                 found_ag_items = self.agenda.finditem(timespan=timespan)
                 for ag_item in found_ag_items:
-                    ag_item.persons_not_avlbl.add(person.name)
+                    ag_item.persons_not_available.add(person.name)
 
     def write_agenda_to_csv_file(self, filename):
         """Write the agenda to the csv file <filename>.

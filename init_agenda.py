@@ -6,8 +6,9 @@ import const
 
 
 class Planningelement:
-    """An instance of class Planningelement 
-    holds methods and information for one shift of which there are 4 in a day.
+    """A Planningelement is a daily shift of four hours of which there are 
+    four in a day.
+    Note: 
     We cannot use namedtuples here because the contents will be changed later.
     """
     # But perhaps a SimpleNamespace will do!!
@@ -15,13 +16,14 @@ class Planningelement:
         self.date = 'date_object'
         # shift: string. '1' = 7:00-11:00, '2' = 11:00-15:00, 
         #   '3' = 15:00-19:00, '4' = 19:00-23:00
-        self.shift = 0
-        self.weeknr = 0             # int. 1-52
+        self.shift = 0              # int {1,4}
+        self.weeknr = 0             # int. {1-52}
         self.weekday = 0            # int. isoweekday: 1 = monday. 
-        # persons: list of persons in this shift. Maximum is 2.
+        # persons: person names scheduled for this shift. Maximum is 2.
         self.persons = []           
-        # persons_not_avlbl: set of persons not available for this shift.
-        self.persons_not_avlbl = set()  
+        # persons_not_available:
+        # set of person names not available for this shift.
+        self.persons_not_available = set()  
         # Why a set? Because several functions add a person 
         # to the set, and the same person must not be 
         # in the set more than once.
@@ -33,7 +35,7 @@ class Planningelement:
             f"weekday: {self.weekday}, "
             f"shift: {self.shift}, "
             f"persons: {self.persons}, "
-            f"persons_not_avlbl: {self.persons_not_avlbl}"
+            f"persons_not_available: {self.persons_not_available}"
         )
 
 

@@ -176,7 +176,7 @@ class Volunteers:
             if (xls_data.Actief):
 
                 # Column Service
-                # TODO Iemand kan zowel verzorger als algemeen zijn!!
+                # TODO Iemand kan zowel verzorger als algemeen zijn!
                 # Moet dus een list worden i.p.v. string, 
                 # met test op 'in' i.p.v. ==
                 service = xls_data.Service or ""
