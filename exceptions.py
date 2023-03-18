@@ -38,7 +38,7 @@ class DayAndShiftsStringError(Exception):
         inputstring -- day_and_shifts_string with wrong format.
     """
     def __init__(self, inputstring, msg=(
-            f'formaat niet correct in kolom ')):
+            f'formaat niet correct in ')):
         self.name = inputstring
         self.msg = msg
         super().__init__(self.msg + inputstring + '"')

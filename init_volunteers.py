@@ -1,3 +1,4 @@
+from collections import Counter
 from collections import namedtuple
 from datetime import datetime
 import re
@@ -99,8 +100,8 @@ class Volunteers:
             if p.service == 'verzorger']))
 
     def search(self, namelist):
-        """Return all found persons 
-        in the Volunteers collection as a list of person names.
+        """Return all found persons in the Volunteers collection
+        as a list of person names.
         """
         result = []
         for name in namelist:
@@ -202,13 +203,19 @@ class Volunteers:
                 not_on_shifts_per_weekday = (
                     self.day_and_shifts_to_dict(not_on_shifts_per_weekday,
                     'NietOpDagEnDienst', line_num))
+                self._check_sanity('day_and_shifts_dict',
+                        not_on_shifts_per_weekday,
+                        'NietOpDagEnDienst', line_num)
                 
                 # Column VoorkeurDagEnDienst
                 # preferred_shifts (prefs)
-                preferred_shifts = xls_data.VoorkeurDagEnDienst or ""
-                prefs_dict = (
-                    self.day_and_shifts_to_dict(preferred_shifts,
+                prefs_value = xls_data.VoorkeurDagEnDienst or ""
+                pref_day_and_shifts = (
+                    self.day_and_shifts_to_dict(prefs_value,
                     'VoorkeurDagEnDienst', line_num))
+                self._check_sanity('day_and_shifts_dict',
+                        pref_day_and_shifts,
+                        'VoorkeurDagEnDienst', line_num)
                 
                 # Column DienstenPerAantalWeken
                 # xls OpenOffice is confusing. Even though the column
@@ -249,7 +256,7 @@ class Volunteers:
                     not_on_shifts_per_weekday)
                 person.shifts_per_weeks = shifts_per_weeks
                 person.not_in_timespan = not_in_timespan
-                person.preferred_shifts = prefs_dict
+                person.preferred_shifts = pref_day_and_shifts
                 person.availability_counter = availability_counter
                 person.weekend_counter = weekend_counter
                 volunteers.append(person)
@@ -264,6 +271,16 @@ class Volunteers:
         def find_duplicate_personnames(nameslist, name):
             return [idx for idx, value in enumerate(nameslist)
                     if value == name]
+        
+        def check_day_and_shifts_count(operand):
+            """Check for duplicate shifts in a day_and_shifts dict.
+            """
+            for weekday in operand.keys():
+                cnt = Counter(operand[weekday])
+                for shift in cnt.values():
+                    if shift > 1:
+                        return False
+            return True
         
         def check_day_and_shifts_string(operand):
             # Return None if something is wrong.
@@ -302,6 +319,13 @@ class Volunteers:
         
         if test == 'day_and_shifts_string':
             if not check_day_and_shifts_string(operand):
+                raise exceptions.DayAndShiftsStringError(
+                    f'kolom: {columnname!r}, '
+                    f'regel: {line_num}, '
+                    f'tekst: {operand!r})')
+        
+        if test == 'day_and_shifts_dict':
+            if not check_day_and_shifts_count(operand):
                 raise exceptions.DayAndShiftsStringError(
                     f'kolom: {columnname!r}, '
                     f'regel: {line_num}, '

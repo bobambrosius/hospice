@@ -161,6 +161,7 @@ class Scheduler:
                         # on the day, then randomly select 1 shift.
                         # Otherwise the scheduler would always pick
                         # the first day.
+                        # TODO gebruik choice i.p.v. sample
                         if (agenda_item.weekday == pref_weekday
                                 and agenda_item.shift 
                                 in random.sample(pref_shifts, 1)):
