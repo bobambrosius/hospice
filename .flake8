@@ -1,0 +1,17 @@
+[flake8]
+ignore =
+    # Trailing whitespace
+    W291,
+
+    # blank line contains whitespace
+    W293,
+    
+    # line break before/after binary operator
+    W503,
+    W504,
+    
+    # Continuation line under-indented for visual indent
+    E128,
+    
+    # f-string is missing placeholders
+    F541,
