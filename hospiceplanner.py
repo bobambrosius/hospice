@@ -76,8 +76,8 @@ class Scheduler:
             self._update_persons_not_available(agenda_item)
 
     def _determine_group_not_available(self, agenda_item):
-        """Exclude the persons that are marked as 
-        not available for this shift.
+        """Return the set of persons that are marked as 
+        not available for the current shift.
         """
         group_not_available = set(tuple(agenda_item.persons_not_available))
 
@@ -276,7 +276,8 @@ class Scheduler:
         # not be scheduled in a weekend for the next
         # three weeks (untill the counter reaches WEEKENDCOUNTER).
         if agenda_item.date.isoweekday() in (6, 7):
-            persons = self.Volunteers.find([person_caretaker, person_generic])
+            persons = self.Volunteers.search([
+                person_caretaker, person_generic])
             for p in persons:
                 if p.name not in const.PERSONS_ALWAYS_IN_WEEKEND:
                     p.weekend_counter = 0
@@ -508,6 +509,9 @@ class Scheduler:
             print(f'Bestand opgeslagen: {filename}')
 
     def not_scheduled_shifts(self):
+        """Report the number shifts that could not be scheduled,
+        Seperate for caretakers and generalists, and total.
+        """
         caretakers = [ag_item for ag_item in self.agenda.items
                       if not ag_item.persons[0]
                       and ag_item.date not in self.holydays]
@@ -516,13 +520,11 @@ class Scheduler:
                        and ag_item.date not in self.holydays]
         cc = len(caretakers)
         gc = len(generalists)
-        total = cc + gc
         print(f'Aantal ongepland diensten, verzorgers: {cc}, '
-              f'algemenen: {gc}. Totaal: {total}') 
+              f'algemenen: {gc}. Totaal: {cc + gc}') 
 
     def persons_not_scheduled_in_weekend(self):
-        """After de scheduler is finished, determine which persons
-        are not scheduled in the weekend.
+        """Report which persons are not scheduled in the weekend.
         """
         scheduled_volunteers = set()
         for ag_item in self.agenda.items:
@@ -537,15 +539,16 @@ class Scheduler:
             unscheduled = list(unscheduled)
             print('\nDe volgende vrijwilligers zijn niet ' + 
                 'ingepland in het weekend:')
-            for person in self.Volunteers.find(unscheduled):
+            for person in self.Volunteers.search(unscheduled):
                 print(f'{person.name:20} {person.service:10} '
-                      f'{tuple(person.shifts_per_weeks)} ' 
+                      f'({person.shifts_per_weeks.shifts},'
+                      f'{person.shifts_per_weeks.per_weeks}) ' 
                       f'{person.not_on_shifts_per_weekday}'
                       )
          
     def persons_not_scheduled(self):
-        """After de schedule is finished, determine if the capacity
-        of the full group of volunteers has been used.
+        """Report if the capacity of the full group of volunteers
+        has been used.
         """
         scheduled_volunteers = set()
         for ag_item in self.agenda.items:
@@ -598,10 +601,11 @@ def main(args):
     scheduler.write_agenda_to_txt_file(outfilename + '.txt')
     scheduler.write_agenda_to_csv_file(outfilename + '.csv')
     
+    scheduler.not_scheduled_shifts()
+    
     if args.verbose:
         scheduler.persons_not_scheduled()
-        # scheduler.persons_not_scheduled_in_weekend()
-        scheduler.not_scheduled_shifts()
+        scheduler.persons_not_scheduled_in_weekend()
     
 
 if __name__ == '__main__':
@@ -626,6 +630,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     if args.verbose:
-        print("\nApplication arguments are: ", args)
+        print("\nApplication arguments: ", args)
 
     main(args)

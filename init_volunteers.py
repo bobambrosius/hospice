@@ -98,9 +98,9 @@ class Volunteers:
             for p in self.persons
             if p.service == 'verzorger']))
 
-    def find(self, namelist):
+    def search(self, namelist):
         """Return all found persons 
-        in the Volunteers collection in namelist.
+        in the Volunteers collection as a list of person names.
         """
         result = []
         for name in namelist:
@@ -156,11 +156,11 @@ class Volunteers:
             return {}
 
     def _read_volunteersfile(self, sourcefile):
-        """read a prepared xls file <sourcefile>.
+        """read a prepared .xls file <sourcefile>.
         The attributes are extracted from the column names.
-        Read the values from the xls file.
+        Read the values from the .xls file.
         Assign the values to the an instance of class 'Person'.
-        Return a list of the instances 'Person'.
+        Return a tuple of the instances 'Person'.
         """
         volunteers = []
         

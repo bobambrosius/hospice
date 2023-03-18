@@ -42,7 +42,7 @@ class Planningelement:
 class Agenda:
     """Agenda has items. This is a list of instances of class Planningelement.
     Methods:
-        finditem()
+        searchitems()
     """
     def __init__(self, year, quarter):
         self.year = year
