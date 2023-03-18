@@ -299,7 +299,6 @@ class Volunteers:
             # and then an endless repetition of
             #   '#' + (the first part, ending with '#').
             # Example: ma:1,2,3,4# di:1,2,3# zo:4#
-            # TODO 2,2,3 should not match!
             pattern = re.compile(
                 r'^(((ma|di|wo|do|vr|za|zo)[:][1-4]([,][1-4])*)[#])*$')
             return re.match(pattern, operand)
@@ -347,7 +346,7 @@ class Volunteers:
 
         if test == "dates_string" and all(operand):
             # TODO gekopieerd uit init_agenda!
-            # TODO hat jaar kan ook onjuist zijn, maar denk eraan
+            # TODO het jaar kan ook onjuist zijn, maar denk eraan
             # dat de kwartalen over het jaar heen gaan.
             for item in operand:
                 dates = item.split('>') 
@@ -363,8 +362,8 @@ class Volunteers:
                                 f'regel: {line_num}, '
                                 f'tekst: {item!r})')
                     else:
-                        # The variable is not important, just the execution
-                        # of the function.
+                        # The variable is not important,
+                        # only the execution of the function.
                         _ = datetime.strptime(dates[0], 
                             const.DATEFORMAT).date()
                 except ValueError:

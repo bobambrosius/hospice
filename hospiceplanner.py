@@ -343,17 +343,18 @@ class Scheduler:
 
         # Make the person unavailable for the rest of the week,
         # because the capacity must be distributed
-        # over more than one week.
+        # over more than one week if the person works
+        # on 2 or more shifts per week or once in 2 weeks.
         all_week_not_available([(3, 2), (2, 3), (1, 2)])
         
         # TODO it is possible that a person has a shift 
-        #   on the last day of the quarter.
-        #   The scheduler of the next quarter has no knowledge 
-        #   of te former planning.
-        #   And thus a person can be scheduled 
-        #   on the first day of the new quarter: two days in a row.
-        #   Solution: register the date for the persons 
-        #   in "nietInPeriode" in the csv source file.
+        # on the last day of the quarter.
+        # The scheduler of the next quarter has no knowledge 
+        # of te former planning.
+        # And thus a person can be scheduled 
+        # on the first day of the new quarter: two days in a row.
+        # Solution: register the date for the persons 
+        # in "nietInPeriode" in the csv source file.
 
     def _update_availability_counter(self, agenda_item):
         """Decrease availability_counter for the 2 persons in the agenda item.
