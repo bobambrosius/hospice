@@ -160,15 +160,13 @@ class Scheduler:
                         # And if a person has more than 1 shift preference
                         # on the day, then randomly select 1 shift.
                         # Otherwise the scheduler would always pick
-                        # the first day.
-                        # TODO gebruik choice i.p.v. sample
+                        # the first day in the range.
                         if (agenda_item.weekday == pref_weekday
                                 and agenda_item.shift 
-                                in random.sample(pref_shifts, 1)):
+                                in [random.choice(pref_shifts)]):
                             candidates.append(person.name)
             if candidates:
-                [selected] = random.sample(candidates, 1)
-                return selected
+                return random.choice(candidates)
             else:
                 return None
 
@@ -236,12 +234,9 @@ class Scheduler:
             remove_persons_with_future_prefs(
                 'verzorger', diff_group_caretaker, agenda_item)
 
-            # Select a random sample of 1 person 
-            # as a list of 1 item from both sets.
+            # Select a random person from both sets.
             # Note: function 'random' doesn't operate on a set,
             # so we convert it to a tuple.
-            # Note: random.sample() returns a list. 
-            # We need the first and only item [0]
 
             # Choose generalist
             if diff_group_generic:
@@ -251,8 +246,7 @@ class Scheduler:
                 if pref_person:
                     person_generic = pref_person
                 else:
-                    [person_generic] = random.sample(
-                        diff_group_generic, 1)
+                    person_generic = random.choice(diff_group_generic)
             else:
                 person_generic = ""  # nobody is available
                 
@@ -264,8 +258,7 @@ class Scheduler:
                 if pref_person:
                     person_caretaker = pref_person
                 else:
-                    [person_caretaker] = random.sample(
-                        diff_group_caretaker, 1)
+                    person_caretaker = random.choice(diff_group_caretaker)
             else:
                 person_caretaker = ""  # nobody is available
         
