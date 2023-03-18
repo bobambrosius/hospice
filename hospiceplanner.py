@@ -405,7 +405,7 @@ class Scheduler:
                         person.shifts_per_weeks.shifts)
 
     def _apply_static_rules(self):
-        """Initialise the agenda data 'persons not_available' 
+        """Initialise tagenda.item.persons not_available 
         with the preferences of each volunteer i.e.
         persons who don't want to be in a certain shift,
         or who don't want to work on a certain day of the week,
@@ -414,26 +414,16 @@ class Scheduler:
         for person in self.all_persons:
             # person is not working on a specific day of week
             # on a specific shift
-            for item in person.not_on_shifts_per_weekday.items():
-                weekday, shifts = item
+            for weekday, shifts in person.not_on_shifts_per_weekday.items():
                 for shift in shifts:
-                    # TODO HIER BEGRIJP IK NIETS VAN
-                    # found_items = self.agenda.finditem(
-                    #    weekday = weekday, shift = shift)
-                    found_items = []
-                    for ag_item in self.agenda.items:
-                        if ((ag_item.shift == shift) 
-                                and (ag_item.weekday == weekday)):
-                            found_items.append(ag_item)
-                    for i in found_items:
-                        i.persons_not_available.add(person.name)
+                    for ag_item in self.agenda.searchitems(weekday, shift):
+                        ag_item.persons_not_available.add(person.name)
 
             # person is not working between dates 
             # person.not_in_timespan: 
             #   e.g. [ '22-4-2023, 29-3-2023, 2-1-2023>3-1-2023' ]
             for timespan in person.not_in_timespan:
-                found_ag_items = self.agenda.finditem(timespan=timespan)
-                for ag_item in found_ag_items:
+                for ag_item in self.agenda.searchitems(timespan=timespan):
                     ag_item.persons_not_available.add(person.name)
 
     def write_agenda_to_csv_file(self, filename):
