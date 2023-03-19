@@ -299,13 +299,13 @@ class Volunteers:
             # and then an endless repetition of
             #   '#' + (the first part, ending with '#').
             # Example: ma:1,2,3,4# di:1,2,3# zo:4#
-            pattern = re.compile(
-                r'^(((ma|di|wo|do|vr|za|zo)[:][1-4]([,][1-4])*)[#])*$')
+            pattern = r'^(((ma|di|wo|do|vr|za|zo)[:][1-4]([,][1-4])*)[#])*$'
             return re.match(pattern, operand)
 
         def check_shifts_per_weeks(operand):
             # shifts_per_weeks must be like 1,2 or 3,2 or ...
-            pattern = re.compile(r'^(1,1|1,2|3,2|2,1|2,3)$')
+            # pattern = re.compile(r'^(1,1|1,2|3,2|2,1|2,3)$')
+            pattern = r'^(1,1|1,2|3,2|2,1|2,3)$'
             return re.match(pattern, operand)
 
         # End of helper functions
