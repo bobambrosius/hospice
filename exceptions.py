@@ -37,27 +37,15 @@ class DayAndShiftsStringError(Exception):
     Attributes:
         inputstring -- day_and_shifts_string with wrong format.
     """
-    def __init__(self, inputstring, msg=(
-            f'formaat niet correct in ')):
-        self.name = inputstring
-        self.msg = msg
-        super().__init__(self.msg + inputstring + '"')
-
-
-class InvalidColumnHeaderError(ValueError):
-    """Exception raised if a columnheader in the sourcefile is not valid.
-
-    Attributes:
-        Columnheader -- columnheader with invalid name
-    """
-    def __init__(self, columnheader, msg=(
-            f'Kolomkop heeft een '
-            f'ongeldige waarde. \n'
-            f'Alleen alfabet teken en '
-            f'underscore is toegestaan.')):
-        self.name = columnheader
-        self.msg = msg
-        super().__init__(self.msg + ': "' + columnheader + '"')
+    def __init__(self, columnname, line_num, operand):
+        self.columnname = columnname
+        self.line_num = line_num
+        self.operand = operand
+        super().__init__(
+            f'Formaat niet correct in '
+            f'kolom: {self.columnname!r}, '
+            f'regel: {self.line_num}, '
+            f'tekst: {self.operand!r})')
 
 
 class InvalidSourceFileError(Exception):

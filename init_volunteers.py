@@ -319,16 +319,12 @@ class Volunteers:
         if test == 'day_and_shifts_string':
             if not check_day_and_shifts_string(operand):
                 raise exceptions.DayAndShiftsStringError(
-                    f'kolom: {columnname!r}, '
-                    f'regel: {line_num}, '
-                    f'tekst: {operand!r})')
+                    columnname, line_num, operand)
         
         if test == 'day_and_shifts_dict':
             if not check_day_and_shifts_count(operand):
                 raise exceptions.DayAndShiftsStringError(
-                    f'kolom: {columnname!r}, '
-                    f'regel: {line_num}, '
-                    f'tekst: {operand!r})')
+                    columnname, line_num, operand)
         
         if test == "shifts_per_weeks":
             if not check_shifts_per_weeks(operand):
