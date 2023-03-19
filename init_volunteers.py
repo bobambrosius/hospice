@@ -80,18 +80,10 @@ class Volunteers:
     Attributes:
         persons: (tuple)
             all instances of Person.
-        generalist_names:
-            A set of person names who's service is generic.
-        caretaker_names:
+        generalist_names: (set)
+            A set of person names who's service is generalist.
+        caretaker_names: (set)
             A set of person names who's service is caretaking.
-    
-    Methods:
-        search(namelist):
-            returns a list of instances of Person that have a matching
-            name in namelist.
-        show_count():
-            report how many persons of both service categories 
-            are available this quarter.
     """
     def __init__(self, sourcefilename):
 
@@ -116,8 +108,8 @@ class Volunteers:
             if p.service == 'verzorger']))
 
     def search(self, namelist):
-        """Return all found persons in the Volunteers collection
-        as a list of person names.
+        """returns a list of instances of Person that have
+        a matching name in namelist.
         """
         result = []
         for name in namelist:
@@ -127,6 +119,9 @@ class Volunteers:
         return result
     
     def show_count(self):
+        """report how many persons of both service categories 
+        are available this quarter.
+        """
         print()
         print(f'Er zijn {len(self.caretaker_names)} verzorgers beschikbaar.')
         print(f'Er zijn {len(self.generalist_names)} algemenen beschikbaar.')

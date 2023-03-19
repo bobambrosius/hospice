@@ -59,6 +59,26 @@ class Scheduler:
     Scheduler has to account for personal wishes
     like no being available on a specific weekday.
     Oh, and it can write the schedule to a csv file.
+    
+    Attributes:
+        year: (int)
+            The year being scheduled.
+        quarter: (int)
+            The quarter being scheduled.
+        version: (int)
+            The version of the produced schedule.
+        Volunteers: (Volunteers)
+            One instance of class Volunteers
+        all_persons: (Person)
+            tuple of all instances Person
+        generalist_names: (set)
+            Set of person names who's service is 'algemeen'.
+        caretaker_names: (set)
+            Set of person names who's service is 'caretaker'.
+        currentweek: (int)
+            The week that is being scheduled.
+        holydays: (tuple)
+            Date_objects that are a holyday for hospice. 
     """
     def __init__(self, year, quarter, version, agenda, volunteers):
         # Show month- and weeknames in Dutch
