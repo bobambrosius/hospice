@@ -1,3 +1,6 @@
+"""Initialise the agenda for all days of 
+    a chosen year and quarter.
+"""
 from datetime import date as Date
 from datetime import timedelta
 from datetime import datetime
@@ -8,25 +11,29 @@ import const
 class Planningelement:
     """A Planningelement is a daily shift of four hours of which there are 
     four in a day.
-    Note: 
-    We cannot use namedtuples here because the contents will be changed later.
+    Attributes:
+        date
+            -- date_object. Date of the agenda item.
+        shift
+            -- int denoting the shift of the date
+                '1' = 7:00-11:00, '2' = 11:00-15:00, 
+                '3' = 15:00-19:00, '4' = 19:00-23:00
+        weeknr
+            -- int {1-52}
+        weekday
+            -- int, isoweekday. 1 = monday
+        persons 
+            -- person names scheduled for this shift. Maximum is 2.
+        persons_not_available
+            -- set of person names not available for this shift.
     """
-    # But perhaps a SimpleNamespace will do!!
     def __init__(self):
         self.date = 'date_object'
-        # shift: string. '1' = 7:00-11:00, '2' = 11:00-15:00, 
-        #   '3' = 15:00-19:00, '4' = 19:00-23:00
-        self.shift = 0              # int {1,4}
-        self.weeknr = 0             # int. {1-52}
-        self.weekday = 0            # int. isoweekday: 1 = monday. 
-        # persons: person names scheduled for this shift. Maximum is 2.
+        self.shift = 0
+        self.weeknr = 0
+        self.weekday = 0
         self.persons = []           
-        # persons_not_available:
-        # set of person names not available for this shift.
         self.persons_not_available = set()  
-        # Why a set? Because several functions add a person 
-        # to the set, and the same person must not be 
-        # in the set more than once.
         
     def __repr__(self):
         return (
@@ -41,6 +48,10 @@ class Planningelement:
 
 class Agenda:
     """Agenda has items. This is a list of instances of class Planningelement.
+    Attributes:
+        year -- int. The year of the quarter.
+        quarter -- int. The quarter of the year.
+        items -- Instances of Planningelement for a quarter of a year. 
     Methods:
         searchitems()
     """

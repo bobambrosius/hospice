@@ -12,42 +12,47 @@ import exceptions
 
 class Person:
     """A Person is a human being.
-    .name: 
-        Full name of the person e.g. "John Doe".
-    .service: 
-        Each shift needs a service 'verzorger' and a service 'algemeen'
-        so we need to know wich type of service a person provides.
-    .not on weekday: 
-        The weekdays on which the person doesn't want to be scheduled.
-    .not in shift: 
-        The type of shift in which the person doesn't want to be scheduled.
-    .shifts_per_weeks: 
-        On how many shifts in how many weeks the person wants to be scheduled.
-    .not_in_timespan: 
-        On which days of the year quarter the person 
-        doesn't want to be scheduled.
-    .preferred_shifts:
-        Some volunteers prefer to be scheduled on a specific day and shift.
-    .availability_counter: 
-        The number of times that the person 
-        is available for scheduling per one or more weeks.
-        The counter is initialised with shifts_per_week.shifts.
-        The counter is reduced by 1 when a scheduling happens for the person.
-        The counter is reset at the start of scheduling a new week 
-        if the value is 0.
-    .weekend_counter:
-        Each person is obligated to run a shift in the weekend once a month.
-        The counter has to be 4 for the person to be eligible for
-        schediling in a weekend.
-        When a person is scheduled in a weekend, the weekend_counter is
-        reset to zero. At the start of scheduling a new week, 
-        the counter is incremented by 1. While the counter is not yet 4,
-        the person is not available for scheduling in the weekend.
+
+    Attributes:
+        name: (string)
+            Full name of the person e.g. "John Doe".
+        service: (string)
+            Each shift needs a service 'verzorger' and a service 'algemeen'
+            so we need to know wich type of service a person provides.
+        shifts_per_weeks: (SimpleNamespace) shifts=int per_weeks=int
+            On how many shifts in how many weeks the person
+            wants to be scheduled.
+        not_on_shifts_per_weekday: (dict)
+            On which weekday on which shifts a person is not willing to work.
+            key=(int) weekday, value = tuple of (int) shift
+        not_in_timespan: (tuple)(date_object)[>(date_object)]
+            On which days of the year quarter the person 
+            doesn't want to be scheduled.
+        preferred_shifts: (dict)
+            Some volunteers prefer to be scheduled on a specific day and shift.
+            key=(int) weekday, value = tuple of (int) shift
+        availability_counter: (int)
+            The number of times that the person 
+            is available for scheduling per one or more weeks.
+            The counter is initialised with shifts_per_week.shifts.
+            The counter is reduced by 1 when a scheduling happens
+            for the person.
+            The counter is reset at the start of scheduling a new week 
+            if the value is 0.
+        weekend_counter: (int)
+            Each person is obligated to run a shift in the weekend
+            once a month.
+            The counter has to be 4 for the person to be eligible for
+            schediling in a weekend.
+            When a person is scheduled in a weekend, the weekend_counter is
+            reset to zero. At the start of scheduling a new week, 
+            the counter is incremented by 1. While the counter is not yet 4,
+            the person is not available for scheduling in the weekend.
     """
     def __init__(self):
         self.name = "" 
-        self.service = ""  # 'algemeen' or 'verzorger'  
-        self.shifts_per_weeks = ()  # SimpleNamespace ShiftsPerWeeks
+        self.service = ""
+        self.shifts_per_weeks = ()
         self.not_on_shifts_per_weekday = dict()
         self.preferred_shifts = dict()
         self.not_in_timespan = ()
@@ -72,10 +77,21 @@ class Volunteers:
     """Volunteers is a collection of instances Person who work without
     fee for a hospice organisation.
 
-    .generalist_names:
-        A set of person names who's service is generic.
-    .caretaker_names:
-        A set of person names who's service is caretaking.
+    Attributes:
+        persons: (tuple)
+            all instances of Person.
+        generalist_names:
+            A set of person names who's service is generic.
+        caretaker_names:
+            A set of person names who's service is caretaking.
+    
+    Methods:
+        search(namelist):
+            returns a list of instances of Person that have a matching
+            name in namelist.
+        show_count():
+            report how many persons of both service categories 
+            are available this quarter.
     """
     def __init__(self, sourcefilename):
 
@@ -121,7 +137,7 @@ class Volunteers:
         for p in self.persons:
             print(p)
 
-    def day_and_shifts_to_dict(self,
+    def _day_and_shifts_to_dict(self,
             day_and_shifts_string, columnname, line_num):
         """The day_and_shifts_string is 
         for example 'ma:1, 2,3,4#  wo:3,4 # zo:4.'
@@ -201,7 +217,7 @@ class Volunteers:
                 not_on_shifts_per_weekday = (
                     xls_data.NietOpDagEnDienst or "")
                 not_on_shifts_per_weekday = (
-                    self.day_and_shifts_to_dict(not_on_shifts_per_weekday,
+                    self._day_and_shifts_to_dict(not_on_shifts_per_weekday,
                     'NietOpDagEnDienst', line_num))
                 self._check_sanity('day_and_shifts_dict',
                         not_on_shifts_per_weekday,
@@ -211,7 +227,7 @@ class Volunteers:
                 # preferred_shifts (prefs)
                 prefs_value = xls_data.VoorkeurDagEnDienst or ""
                 pref_day_and_shifts = (
-                    self.day_and_shifts_to_dict(prefs_value,
+                    self._day_and_shifts_to_dict(prefs_value,
                     'VoorkeurDagEnDienst', line_num))
                 self._check_sanity('day_and_shifts_dict',
                         pref_day_and_shifts,
