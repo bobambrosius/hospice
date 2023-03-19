@@ -247,7 +247,7 @@ class Volunteers:
                 )
                 self._check_sanity('dates_string', 
                     not_in_timespan, 'NietInPeriode', line_num)
-
+                
                 # Now we have all the data to instantiate a Person
                 person = Person()
                 person.name = name
@@ -310,64 +310,71 @@ class Volunteers:
 
         # End of helper functions
         # ------------------------------------------------------------
-        if test == 'duplicate_names': 
-            nameslist = [p.name for p in self.persons]
-            for name in nameslist:
-                if len(find_duplicate_personnames(nameslist, name)) > 1:
-                    raise exceptions.DuplicatePersonnameError(name)
-        
-        if test == 'day_and_shifts_string':
-            if not check_day_and_shifts_string(operand):
-                raise exceptions.DayAndShiftsStringError(
-                    columnname, line_num, operand)
-        
-        if test == 'day_and_shifts_dict':
-            if not check_day_and_shifts_count(operand):
-                raise exceptions.DayAndShiftsStringError(
-                    columnname, line_num, operand)
-        
-        if test == "shifts_per_weeks":
-            if not check_shifts_per_weeks(operand):
-                raise exceptions.ShiftsPerWeeksError(
-                    f'kolom: {columnname!r}, '
-                    f'regel: {line_num}, '
-                    f'tekst: {operand!r})')
-        
-        if test == "service":
-            if (not operand) or operand not in ('verzorger, algemeen'):
-                raise exceptions.ServicenameError(
-                    f'kolom: {columnname!r}, '
-                    f'regel: {line_num}, '
-                    f'tekst: {operand!r})')
+        match test:
+            case 'duplicate_names': 
+                nameslist = [p.name for p in self.persons]
+                for name in nameslist:
+                    if len(find_duplicate_personnames(nameslist, name)) > 1:
+                        raise exceptions.DuplicatePersonnameError(name)
+            
+            case 'day_and_shifts_string':
+                if not check_day_and_shifts_string(operand):
+                    raise exceptions.DayAndShiftsStringError(
+                        columnname, line_num, operand)
+            
+            case 'day_and_shifts_dict':
+                if not check_day_and_shifts_count(operand):
+                    raise exceptions.DayAndShiftsStringError(
+                        columnname, line_num, operand)
+            
+            case 'shifts_per_weeks':
+                if not check_shifts_per_weeks(operand):
+                    raise exceptions.ShiftsPerWeeksError(
+                        f'kolom: {columnname!r}, '
+                        f'regel: {line_num}, '
+                        f'tekst: {operand!r})')
+            
+            case 'service':
+                if (not operand) or operand not in ('verzorger, algemeen'):
+                    raise exceptions.ServicenameError(
+                        f'kolom: {columnname!r}, '
+                        f'regel: {line_num}, '
+                        f'tekst: {operand!r})')
 
-        if test == "dates_string" and all(operand):
-            # TODO gekopieerd uit init_agenda!
-            # TODO het jaar kan ook onjuist zijn, maar denk eraan
-            # dat de kwartalen over het jaar heen gaan.
-            for item in operand:
-                dates = item.split('>') 
-                try:
-                    if len(dates) > 1:
-                        startdate = datetime.strptime(dates[0], 
+            case 'dates_string':
+                if all(operand):
+                    # TODO gekopieerd uit init_agenda!
+                    # TODO het jaar kan ook onjuist zijn, maar denk eraan
+                    # dat de kwartalen over het jaar heen gaan.
+                    for item in operand:
+                        dates = item.split('>') 
+                        try:
+                            if len(dates) > 1:
+                                startdate = datetime.strptime(dates[0], 
+                                            const.DATEFORMAT).date()
+                                enddate = datetime.strptime(dates[1], 
+                                          const.DATEFORMAT).date()
+                                if enddate < startdate:
+                                    raise exceptions.DateTimespanError(
+                                        f'kolom: {columnname!r}, '
+                                        f'regel: {line_num}, '
+                                        f'tekst: {item!r})')
+                            else:
+                                # The variable is not important,
+                                # only the execution of the function.
+                                _ = datetime.strptime(dates[0], 
                                     const.DATEFORMAT).date()
-                        enddate = datetime.strptime(dates[1], 
-                                  const.DATEFORMAT).date()
-                        if enddate < startdate:
-                            raise exceptions.DateTimespanError(
+                        except ValueError:
+                            line_num = str(line_num)
+                            raise exceptions.DateFormatError(
                                 f'kolom: {columnname!r}, '
                                 f'regel: {line_num}, '
                                 f'tekst: {item!r})')
-                    else:
-                        # The variable is not important,
-                        # only the execution of the function.
-                        _ = datetime.strptime(dates[0], 
-                            const.DATEFORMAT).date()
-                except ValueError:
-                    line_num = str(line_num)
-                    raise exceptions.DateFormatError(
-                        f'kolom: {columnname!r}, '
-                        f'regel: {line_num}, '
-                        f'tekst: {item!r})')
+            
+            case _:
+                raise exceptions.MissingCaseValueError(
+                    'No match found for "test" in _check_sanity()'
+                )
 
 
 if __name__ == '__main__':

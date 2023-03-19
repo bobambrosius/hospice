@@ -51,3 +51,8 @@ class DayAndShiftsStringError(Exception):
 class InvalidSourceFileError(Exception):
     """Exception raised if the sourcefile can't be read.
     """
+
+
+class MissingCaseValueError(RuntimeError):
+    """Statement 'Case' cold not intepret value
+    """
