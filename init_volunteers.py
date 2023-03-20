@@ -205,8 +205,6 @@ class Volunteers:
                 givenname = xls_data.Voornaam or ""
                 surname = xls_data.Achternaam or "" 
                 name = (givenname.strip() + insert + " " + surname.strip())
-                if name == 'Hermien Heuvelman':
-                    pass
 
                 # Column NietOpDagEnDienst
                 not_on_shifts_per_weekday = (
@@ -341,16 +339,13 @@ class Volunteers:
             case 'shifts_per_weeks':
                 if not check_shifts_per_weeks(operand):
                     raise exceptions.ShiftsPerWeeksError(
-                        f'kolom: {columnname!r}, '
-                        f'regel: {line_num}, '
-                        f'tekst: {operand!r})')
+                        columnname, line_num, operand)
             
             case 'service':
-                if (not operand) or operand not in ('verzorger, algemeen'):
+                if not (operand in ('verzorger', 'algemeen')):
+                    pass
                     raise exceptions.ServicenameError(
-                        f'kolom: {columnname!r}, '
-                        f'regel: {line_num}, '
-                        f'tekst: {operand!r})')
+                        columnname, line_num, operand)
 
             case 'dates_string':
                 if all(operand):
@@ -367,9 +362,7 @@ class Volunteers:
                                           const.DATEFORMAT).date()
                                 if enddate < startdate:
                                     raise exceptions.DateTimespanError(
-                                        f'kolom: {columnname!r}, '
-                                        f'regel: {line_num}, '
-                                        f'tekst: {item!r})')
+                                        columnname, line_num, item)
                             else:
                                 # The variable is not important,
                                 # only the execution of the function.
@@ -378,9 +371,7 @@ class Volunteers:
                         except ValueError:
                             line_num = str(line_num)
                             raise exceptions.DateFormatError(
-                                f'kolom: {columnname!r}, '
-                                f'regel: {line_num}, '
-                                f'tekst: {item!r})')
+                                columnname, line_num, item)
             
             case _:
                 raise exceptions.MissingCaseValueError(

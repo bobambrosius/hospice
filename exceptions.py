@@ -3,17 +3,37 @@ import sys
 # Maximum levels of Traceback. 0 = off
 sys.tracebacklimit = 2
 
+# TODO A lot of repetion here. Remove it.
+
 
 class DateTimespanError(Exception):
     """Exception raised if in two dates, the second date
     is smaller than the first.
     """
+    def __init__(self, columnname, line_num, operand):
+        self.columnname = columnname
+        self.line_num = line_num
+        self.operand = operand
+        super().__init__(
+            f'Formaat niet correct in '
+            f'kolom: {self.columnname!r}, '
+            f'regel: {self.line_num}, '
+            f'tekst: {self.operand!r}')
 
 
 class DateFormatError(Exception):
     """Exception raised if the format of a date
     doesn't conform to const.py.
     """
+    def __init__(self, columnname, line_num, operand):
+        self.columnname = columnname
+        self.line_num = line_num
+        self.operand = operand
+        super().__init__(
+            f'Formaat niet correct in '
+            f'kolom: {self.columnname!r}, '
+            f'regel: {self.line_num}, '
+            f'tekst: {self.operand!r}')
 
 
 class DuplicatePersonnameError(Exception):
@@ -24,18 +44,19 @@ class DuplicatePersonnameError(Exception):
 class ServicenameError(Exception):
     """Exception raised if service has wrong name.
     """
+    def __init__(self, columnname, line_num, operand):
+        self.columnname = columnname
+        self.line_num = line_num
+        self.operand = operand
+        super().__init__(
+            f'Formaat niet correct in '
+            f'kolom: {self.columnname!r}, '
+            f'regel: {self.line_num}, '
+            f'tekst: {self.operand!r}')
 
 
 class ShiftsPerWeeksError(Exception):
     """Exception raised if shifts_per_weeks has wrong format.
-    """
-
-
-class DayAndShiftsStringError(Exception):
-    """Exception raised if the day_and_shifts_string has the wrong format.
-
-    Attributes:
-        inputstring -- day_and_shifts_string with wrong format.
     """
     def __init__(self, columnname, line_num, operand):
         self.columnname = columnname
@@ -45,7 +66,21 @@ class DayAndShiftsStringError(Exception):
             f'Formaat niet correct in '
             f'kolom: {self.columnname!r}, '
             f'regel: {self.line_num}, '
-            f'tekst: {self.operand!r})')
+            f'tekst: {self.operand!r}')
+
+
+class DayAndShiftsStringError(Exception):
+    """Exception raised if the day_and_shifts_string has the wrong format.
+    """
+    def __init__(self, columnname, line_num, operand):
+        self.columnname = columnname
+        self.line_num = line_num
+        self.operand = operand
+        super().__init__(
+            f'Formaat niet correct in '
+            f'kolom: {self.columnname!r}, '
+            f'regel: {self.line_num}, '
+            f'tekst: {self.operand!r}')
 
 
 class InvalidSourceFileError(Exception):
