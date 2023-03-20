@@ -300,7 +300,8 @@ class Scheduler:
                 if pref_person:
                     person_generic = pref_person
                 else:
-                    person_generic = random.choice(diff_group_generic)
+                    person_generic = self.Volunteers\
+                        .get_optimal_person(diff_group_generic)
             else:
                 person_generic = ""  # nobody is available
                 
@@ -312,7 +313,8 @@ class Scheduler:
                 if pref_person:
                     person_caretaker = pref_person
                 else:
-                    person_caretaker = random.choice(diff_group_caretaker)
+                    person_caretaker = self.Volunteers\
+                        .get_optimal_person(diff_group_caretaker)
             else:
                 person_caretaker = ""  # nobody is available
         

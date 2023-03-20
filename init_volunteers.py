@@ -54,6 +54,7 @@ class Person:
         self.service = ""
         self.shifts_per_weeks = ()
         self.not_on_shifts_per_weekday = dict()
+        self.not_on_shifts_count = 0
         self.preferred_shifts = dict()
         self.not_in_timespan = ()
         self.availability_counter = 0 
@@ -118,6 +119,27 @@ class Volunteers:
                     result.append(person)
         return result
     
+    def get_optimal_person(self, namelist):
+        """Return the person name who has the highest
+        'not_on_shifts_per_weekday' shiftcount.
+        If there is more than one person, return
+        the last one found.
+        Why do it? From the list of available persons
+        for a shift, we prefer the person with most
+        shifts unavailable. Other persons have a higher 
+        availability, so we save them for a shift in 
+        the future.
+        """
+        shiftcount = 0
+        persons = [person for person in self.persons
+                   if person.name in namelist]
+        for person in persons:
+            if (person.not_on_shifts_count >= shiftcount):
+                # Choose the more or equal optimal person
+                shiftcount = person.not_on_shifts_count
+                personname = person.name
+        return personname
+            
     def show_count(self):
         """report how many persons of both service categories 
         are available this quarter.
@@ -231,6 +253,13 @@ class Volunteers:
                         not_on_shifts_per_weekday,
                         'NietOpDagEnDienst', line_num)
                 
+                # Count the number of not_in_shifts
+                not_on_shifts_count = 0
+                for weekday in not_on_shifts_per_weekday.keys():
+                    not_on_shifts_count += len(
+                        Counter(not_on_shifts_per_weekday[weekday]).values())
+                pass
+                
                 # Column VoorkeurDagEnDienst
                 # preferred_shifts (prefs)
                 prefs_value = xls_data.VoorkeurDagEnDienst or ""
@@ -278,6 +307,7 @@ class Volunteers:
                 person.service = service
                 person.not_on_shifts_per_weekday = (
                     not_on_shifts_per_weekday)
+                person.not_on_shifts_count = not_on_shifts_count
                 person.shifts_per_weeks = shifts_per_weeks
                 person.not_in_timespan = not_in_timespan
                 person.preferred_shifts = pref_day_and_shifts
