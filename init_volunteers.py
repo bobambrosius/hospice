@@ -178,10 +178,27 @@ class Volunteers:
         
         wb = load_workbook(filename=sourcefile, data_only=True)
         ws = wb.active
-        reader = ws.iter_rows(min_col=10, values_only=True)
-
+        min_col = 10
+        max_col = min_col + 10  # Read eleven(!) columns
+        reader = ws.iter_rows(min_col=min_col,
+                max_col=max_col, values_only=True)
         # get names from column headers
-        Data = namedtuple("Data", next(reader))
+        headers = next(reader)
+        allowed_headers = ('Service', 'Achternaam', 'Voornaam', 'Tussenv', 
+                'Actief', 'DienstenPerAantalWeken', 'NietOpDagEnDienst', 
+                'VoorkeurDagEnDienst', 'NietInPeriode', 'VoorkeurTekst', 
+                'NietSamenMet')
+        for header in headers:
+            if header not in allowed_headers:
+                raise exceptions.SourceFileHeaderError(
+                    f'Een of meer kolomkoppen komt niet voor '
+                    f'in {allowed_headers}')
+        try:
+            Data = namedtuple("Data", headers)
+        except ValueError as e:
+            raise ValueError(f'De namen in de kolomkoppen mogen alleen '
+                             f'alfanumerieke tekens bevatten. '
+                             f'Kolomkop namen: {headers}') from e
         # start enumerating with line number 2
         for line_num, xls_data in enumerate(map(Data._make, reader), 2):
             # read only the Active persons
@@ -198,8 +215,6 @@ class Volunteers:
                 # Columns Achternaam, Tussenv, Voornaam
                 # Person name
                 insert = xls_data.Tussenv or ""
-                if insert.strip():
-                    pass
                 if insert.strip():
                     insert = " " + insert
                 givenname = xls_data.Voornaam or ""

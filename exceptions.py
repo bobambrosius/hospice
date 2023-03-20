@@ -1,7 +1,7 @@
 import sys
 
 # Maximum levels of Traceback. 0 = off
-sys.tracebacklimit = 2
+sys.tracebacklimit = 6
 
 
 class SourcefileValueError(Exception):
@@ -53,6 +53,11 @@ class DayAndShiftsStringError(SourcefileValueError):
     """
     def __init__(self, columnname, line_num, operand):
         super().__init__(columnname, line_num, operand)
+
+
+class SourceFileHeaderError(Exception):
+    """Exception raised if a header is not in allowed headers.
+    """
 
 
 class DuplicatePersonnameError(Exception):
