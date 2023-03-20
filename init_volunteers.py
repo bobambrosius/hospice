@@ -357,7 +357,6 @@ class Volunteers:
             
             case 'service':
                 if not (operand in ('verzorger', 'algemeen')):
-                    pass
                     raise exceptions.ServicenameError(
                         columnname, line_num, operand)
 
