@@ -313,7 +313,6 @@ class Volunteers:
 
         def check_shifts_per_weeks(operand):
             # shifts_per_weeks must be like 1,2 or 3,2 or ...
-            # pattern = re.compile(r'^(1,1|1,2|3,2|2,1|2,3)$')
             pattern = r'^(1,1|1,2|3,2|2,1|2,3)$'
             return re.match(pattern, operand)
 
@@ -375,8 +374,7 @@ class Volunteers:
             
             case _:
                 raise exceptions.MissingCaseValueError(
-                    'No match found for "test" in _check_sanity()'
-                )
+                    'No match found for "test" in _check_sanity()')
 
 
 if __name__ == '__main__':

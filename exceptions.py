@@ -3,84 +3,61 @@ import sys
 # Maximum levels of Traceback. 0 = off
 sys.tracebacklimit = 2
 
-# TODO A lot of repetion here. Remove it.
 
-
-class DateTimespanError(Exception):
+class SourcefileValueError(Exception):
+    """General module error
+    """
+    def __init__(self, columnname, line_num, operand):
+        self.columnname = columnname
+        self.line_num = line_num
+        self.operand = operand
+        super().__init__(
+            f'Formaat niet correct in '
+            f'kolom: {self.columnname!r}, '
+            f'regel: {self.line_num}, '
+            f'tekst: {self.operand!r}')
+    
+    
+class DateTimespanError(SourcefileValueError):
     """Exception raised if in two dates, the second date
     is smaller than the first.
     """
     def __init__(self, columnname, line_num, operand):
-        self.columnname = columnname
-        self.line_num = line_num
-        self.operand = operand
-        super().__init__(
-            f'Formaat niet correct in '
-            f'kolom: {self.columnname!r}, '
-            f'regel: {self.line_num}, '
-            f'tekst: {self.operand!r}')
+        super().__init__(columnname, line_num, operand)
 
 
-class DateFormatError(Exception):
+class DateFormatError(SourcefileValueError):
     """Exception raised if the format of a date
     doesn't conform to const.py.
     """
     def __init__(self, columnname, line_num, operand):
-        self.columnname = columnname
-        self.line_num = line_num
-        self.operand = operand
-        super().__init__(
-            f'Formaat niet correct in '
-            f'kolom: {self.columnname!r}, '
-            f'regel: {self.line_num}, '
-            f'tekst: {self.operand!r}')
+        super().__init__(columnname, line_num, operand)
+
+
+class ServicenameError(SourcefileValueError):
+    """Exception raised if service has wrong name.
+    """
+    def __init__(self, columnname, line_num, operand):
+        super().__init__(columnname, line_num, operand)
+
+
+class ShiftsPerWeeksError(SourcefileValueError):
+    """Exception raised if shifts_per_weeks has wrong format.
+    """
+    def __init__(self, columnname, line_num, operand):
+        super().__init__(columnname, line_num, operand)
+
+
+class DayAndShiftsStringError(SourcefileValueError):
+    """Exception raised if the day_and_shifts_string has the wrong format.
+    """
+    def __init__(self, columnname, line_num, operand):
+        super().__init__(columnname, line_num, operand)
 
 
 class DuplicatePersonnameError(Exception):
     """Exception raised if the sourcefile contains duplicate names.
     """
-
-
-class ServicenameError(Exception):
-    """Exception raised if service has wrong name.
-    """
-    def __init__(self, columnname, line_num, operand):
-        self.columnname = columnname
-        self.line_num = line_num
-        self.operand = operand
-        super().__init__(
-            f'Formaat niet correct in '
-            f'kolom: {self.columnname!r}, '
-            f'regel: {self.line_num}, '
-            f'tekst: {self.operand!r}')
-
-
-class ShiftsPerWeeksError(Exception):
-    """Exception raised if shifts_per_weeks has wrong format.
-    """
-    def __init__(self, columnname, line_num, operand):
-        self.columnname = columnname
-        self.line_num = line_num
-        self.operand = operand
-        super().__init__(
-            f'Formaat niet correct in '
-            f'kolom: {self.columnname!r}, '
-            f'regel: {self.line_num}, '
-            f'tekst: {self.operand!r}')
-
-
-class DayAndShiftsStringError(Exception):
-    """Exception raised if the day_and_shifts_string has the wrong format.
-    """
-    def __init__(self, columnname, line_num, operand):
-        self.columnname = columnname
-        self.line_num = line_num
-        self.operand = operand
-        super().__init__(
-            f'Formaat niet correct in '
-            f'kolom: {self.columnname!r}, '
-            f'regel: {self.line_num}, '
-            f'tekst: {self.operand!r}')
 
 
 class InvalidSourceFileError(Exception):
